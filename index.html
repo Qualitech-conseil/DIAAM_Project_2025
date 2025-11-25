@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulaire Sondage</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div id="app">
+        <img id="client-logo" src="" alt="Logo"
+             style="max-width:150px; display:block; margin:0 auto 20px;" />
+
+        <h1 id="form-title">Chargement...</h1>
+
+        <form id="survey-form"></form>
+
+        <button id="submit-btn" style="display:none; margin-top:20px;">Envoyer</button>
+
+        <p id="status"></p>
+    </div>
+
+    <script>
+        /***************************************
+         * PARAMÈTRES CLIENT
+        ****************************************/
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get("client");
+
+        if (!clientId) {
+            document.getElementById("app").innerHTML =
+                "<p>Aucun client spécifié. Ajoutez ?client=xxx dans l'URL.</p>";
+        }
+
+        /***************************************
+         * SUPABASE
+        ****************************************/
+        const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+        const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+        /***************************************
+         * VARIABLES GLOBALES
+        ****************************************/
+        let CLIENT_CONFIG = null;
+
+        /***************************************
+         * CHARGEMENT DU FICHIER CLIENT
+        ****************************************/
+        async function loadConfig() {
+            const response = await fetch(`clients/${clientId}/config.json`);
+
+            if (!response.ok) {
+                document.getElementById("app").innerHTML =
+                    "<p>Impossible de charger la configuration du client.</p>";
+                return;
+            }
+
+            CLIENT_CONFIG = await response.json();
+
+            // Affichage logo + titre
+            document.getElementById("client-logo").src = CLIENT_CONFIG.logo || "";
+            document.getElementById("form-title").innerText = CLIENT_CONFIG.title || "Sondage";
+
+            // Construction du formulaire
+            buildForm(CLIENT_CONFIG.categories);
+
+            document.getElementById("submit-btn").style.display = "block";
+        }
+
+        /***************************************
+         * CONSTRUCTION DU FORMULAIRE
+        ****************************************/
+        function buildForm(categories) {
+            const form = document.getElementById("survey-form");
+            form.innerHTML = "";
+
+            categories.forEach(cat => {
+                const block = document.createElement("div");
+                block.className = "category-block";
+                block.dataset.category = cat.id;
+
+                const q = document.createElement("h3");
+                q.innerText = cat.question;
+                block.appendChild(q);
+
+                // Options
+                cat.options.forEach(opt => {
+                    const line = document.createElement("div");
+                    line.innerHTML = `
+                        <label>
+                            <input type="checkbox" class="opt"
+                                   name="${cat.id}" value="${opt}">
+                            ${opt}
+                        </label>`;
+                    block.appendChild(line);
+                });
+
+                // AUTRE
+                const other = document.createElement("div");
+                other.innerHTML = `
+                    <label>
+                        <input type="checkbox" class="opt"
+                               name="${cat.id}" value="Autre"> Autre
+                    </label>
+                    <input type="text" id="other-${cat.id}"
+                           placeholder="Précisez"
+                           style="display:none; margin-left:10px;">
+                `;
+                block.appendChild(other);
+
+                form.appendChild(block);
+            });
+
+            // Activation règles
+            activateRules();
+        }
+
+        /***************************************
+         * GESTION DES RÈGLES
+         * - Max 5 choix
+         * - Champ AUTRE
+        ****************************************/
+        function activateRules() {
+            document.querySelectorAll(".category-block").forEach(block => {
+                const category = block.dataset.category;
+                const checkboxes = block.querySelectorAll("input[type='checkbox']");
+
+                checkboxes.forEach(cb => {
+                    cb.addEventListener("change", () => {
+
+                        // Gestion du champ "Autre"
+                        if (cb.value === "Autre") {
+                            const otherField = document.getElementById(`other-${category}`);
+                            otherField.style.display = cb.checked ? "inline-block" : "none";
+                        }
+
+                        // Max 5 choix
+                        const checked = block.querySelectorAll("input[type='checkbox']:checked");
+                        if (checked.length > 5) {
+                            cb.checked = false;
+                            alert("Vous pouvez sélectionner au maximum 5 produits.");
+                        }
+                    });
+                });
+            });
+        }
+
+        /***************************************
+         * ENVOI VERS SUPABASE
+        ****************************************/
+        async function submitForm() {
+            const status = document.getElementById("status");
+            status.innerText = "";
+
+            const result = [];
+
+            CLIENT_CONFIG.categories.forEach(cat => {
+                const block = document.querySelector(`[data-category="${cat.id}"]`);
+                const selected = [...block.querySelectorAll("input[type='checkbox']:checked")];
+
+                const values = selected.map(s => s.value);
+                let otherValue = null;
+
+                if (values.includes("Autre")) {
+                    otherValue = document.getElementById(`other-${cat.id}`).value || null;
+                }
+
+                result.push({
+                    category_id: cat.id,
+                    question: cat.question,
+                    choices: values,
+                    other: otherValue
+                });
+            });
+
+            const { error } = await supabaseClient.from("responses").insert({
+                client: clientId,
+                data: result,
+                created_at: new Date().toISOString()
+            });
+
+            if (error) {
+                status.innerText = "Erreur lors de l'enregistrement.";
+                console.error(error);
+                return;
+            }
+
+            status.innerText = "Merci, vos réponses ont été enregistrées.";
+            document.getElementById("submit-btn").disabled = true;
+        }
+
+        document.getElementById("submit-btn").addEventListener("click", submitForm);
+
+        loadConfig();
+    </script>
+
+</body>
+</html>
