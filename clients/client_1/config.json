@@ -17,7 +17,8 @@
                 "Produit G",
                 "Produit H",
                 "Produit I",
-                "Produit J"
+                "Produit J",
+                "Autre"
             ],
             "allow_other": true
         },
@@ -26,15 +27,16 @@
             "question": "Quels problèmes rencontrez-vous ?",
             "max_choices": 5,
             "options": [
-                "Bruit",
-                "Usure",
-                "Fuite",
-                "Blocage",
-                "Surchauffe",
-                "Vibrations",
-                "Performance",
-                "Panne ponctuelle",
-                "Panne régulière",
+                "Produit A",
+                "Produit B",
+                "Produit C",
+                "Produit D",
+                "Produit E",
+                "Produit F",
+                "Produit G",
+                "Produit H",
+                "Produit I",
+                "Produit J"
                 "Autre"
             ],
             "allow_other": true
