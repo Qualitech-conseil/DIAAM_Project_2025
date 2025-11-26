@@ -1,1 +1,377 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard - Sondages machines</title>
+
+  <!-- Supabase + Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <style>
+    :root{--accent:#2b6cb0;--bg:#f6f9fc}
+    body{font-family:Inter,system-ui,Arial; background:var(--bg); margin:0; padding:18px; color:#0f172a}
+    .wrap{max-width:1200px;margin:auto}
+    header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    header h1{margin:0;font-size:20px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    select,input,button{padding:8px;border-radius:8px;border:1px solid #e6eef8}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:12px}
+    .card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    .charts{display:flex;flex-direction:column;gap:12px}
+    canvas{background:#fff;border-radius:8px;padding:6px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px}
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .kpis{display:flex;gap:8px;flex-wrap:wrap}
+    .kpi{background:linear-gradient(#fff,#fbfdff);padding:10px;border-radius:8px;min-width:140px}
+    footer{margin-top:18px;color:#64748b;font-size:13px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Dashboard — Sondages machines</h1>
+      <div style="margin-left:auto" id="status-bubble"></div>
+    </header>
+
+    <div class="controls">
+      <label>Client
+        <select id="clientFilter"><option value="">Tous</option></select>
+      </label>
+
+      <label>Machine
+        <select id="machineFilter"><option value="">Toutes</option></select>
+      </label>
+
+      <label>Catégorie
+        <select id="categoryFilter"><option value="">Toutes</option></select>
+      </label>
+
+      <label>Date début <input type="date" id="date-from"/></label>
+      <label>Date fin <input type="date" id="date-to"/></label>
+
+      <label>Recherche
+        <input id="text-search" placeholder="mot-clé (autre/produit)"/>
+      </label>
+
+      <div style="margin-left:auto" class="toolbar">
+        <button id="btn-refresh">Rafraîchir</button>
+        <button id="btn-export-csv">Export CSV</button>
+        <button id="btn-export-json">Export JSON</button>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin-top:12px">
+      <div class="kpi"><strong id="kpi-total">0</strong><div>Total réponses</div></div>
+      <div class="kpi"><strong id="kpi-clients">0</strong><div>Clients</div></div>
+      <div class="kpi"><strong id="kpi-machines">0</strong><div>Machines</div></div>
+    </div>
+
+    <div class="grid">
+      <section>
+        <div class="card">
+          <h3 style="margin-top:0">Top produits (catégorie sélectionnée)</h3>
+          <div class="charts">
+            <canvas id="barChart" height="160"></canvas>
+            <canvas id="pieChart" height="140"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Table des réponses</h3>
+          <div id="table-wrap" style="overflow:auto;max-height:420px">
+            <table id="responsesTable">
+              <thead><tr><th>Date</th><th>Client</th><th>Machine</th><th>Catégorie</th><th>Choix</th><th>Autre</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside>
+        <div class="card">
+          <h3 style="margin-top:0">Filtres rapides</h3>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button id="last-7">7 derniers jours</button>
+            <button id="last-30">30 derniers jours</button>
+            <button id="today">Aujourd'hui</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Sélection catégorie</h3>
+          <select id="quickCategory"></select>
+          <div style="margin-top:10px"><strong>Top 5 produits</strong><div id="topList" style="margin-top:8px"></div></div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <small>Lecture directe depuis la table <code>responses</code>. Assure-toi que la policy SELECT autorise l'anon key ou que tu es authentifié.</small>
+    </footer>
+  </div>
+
+<script>
+/* ================== CONFIG (A REMPLACER) ================== */
+const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";          // remplace par ton URL
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";                                           // remplace par ta anon key
+const PAGE_SIZE = 1000;
+/* ========================================================= */
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// UI refs
+const clientFilter = document.getElementById('clientFilter');
+const machineFilter = document.getElementById('machineFilter');
+const categoryFilter = document.getElementById('categoryFilter');
+const quickCategory = document.getElementById('quickCategory');
+const dateFrom = document.getElementById('date-from');
+const dateTo = document.getElementById('date-to');
+const textSearch = document.getElementById('text-search');
+const btnRefresh = document.getElementById('btn-refresh');
+const btnExportCSV = document.getElementById('btn-export-csv');
+const btnExportJSON = document.getElementById('btn-export-json');
+const responsesTbody = document.querySelector('#responsesTable tbody');
+const statusBubble = document.getElementById('status-bubble');
+const kpiTotal = document.getElementById('kpi-total');
+const kpiClients = document.getElementById('kpi-clients');
+const kpiMachines = document.getElementById('kpi-machines');
+const topList = document.getElementById('topList');
+
+let allResponses = []; // raw rows from supabase
+let parsed = [];       // parsed normalized rows
+let barChart = null;
+let pieChart = null;
+
+// helper parse single DB row -> array of {date, client_id, machine_id, category, choices[], other}
+function normalizeRow(row){
+  // expected row.raw_data = { machine: {...}, categories: [{id, question, choices, other}, ...] }
+  const out = [];
+  const created = row.created_at || row.submitted_at || new Date().toISOString();
+  const client = row.client_id || (row.raw_data?.client_id) || null;
+  const machine = row.machine_id || (row.raw_data?.machine?.machine_id) || null;
+  const categories = (row.raw_data?.categories) || (row.raw_data?.categories) || [];
+  categories.forEach(cat=>{
+    out.push({
+      id: row.id,
+      created_at: created,
+      client_id: client,
+      machine_id: machine,
+      category_id: cat.id || cat.category_id || null,
+      category_label: cat.question || cat.label || cat.id || '—',
+      choices: Array.isArray(cat.choices) ? cat.choices : (cat.selected || []),
+      other: cat.other || (cat.other_values ? cat.other_values.join(", ") : null)
+    });
+  });
+  return out;
+}
+
+async function fetchAllResponses(){
+  statusBubble.innerText = 'Chargement...';
+  allResponses = [];
+  let from = 0;
+  try{
+    while(true){
+      const { data, error } = await supabase
+        .from('responses')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + PAGE_SIZE - 1);
+      if(error) throw error;
+      if(!data || data.length === 0) break;
+      allResponses = allResponses.concat(data);
+      if(data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    // normalize
+    parsed = allResponses.flatMap(normalizeRow);
+    statusBubble.innerText = '';
+    return parsed;
+  }catch(err){
+    console.error(err); statusBubble.innerText = 'Erreur : '+(err.message||err);
+    return [];
+  }
+}
+
+function populateFilters(){
+  // clients and machines
+  const clients = Array.from(new Set(parsed.map(r=>r.client_id).filter(Boolean))).sort();
+  const machines = Array.from(new Set(parsed.map(r=>r.machine_id).filter(Boolean))).sort();
+  const categories = Array.from(new Set(parsed.map(r=>r.category_label).filter(Boolean))).sort();
+
+  clientFilter.innerHTML = `<option value="">Tous</option>` + clients.map(c=>`<option value="${c}">${c}</option>`).join('');
+  machineFilter.innerHTML = `<option value="">Toutes</option>` + machines.map(m=>`<option value="${m}">${m}</option>`).join('');
+  categoryFilter.innerHTML = `<option value="">Toutes</option>` + categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+  quickCategory.innerHTML = `<option value="">Sélectionnez</option>` + categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+  kpiTotal.innerText = parsed.length;
+  kpiClients.innerText = clients.length;
+  kpiMachines.innerText = machines.length;
+}
+
+function applyFilters(){
+  let list = parsed.slice();
+  const client = clientFilter.value;
+  const machine = machineFilter.value;
+  const cat = categoryFilter.value;
+  const txt = textSearch.value.trim().toLowerCase();
+  const from = dateFrom.value ? new Date(dateFrom.value+'T00:00:00') : null;
+  const to = dateTo.value ? new Date(dateTo.value+'T23:59:59') : null;
+
+  if(client) list = list.filter(r=>r.client_id === client);
+  if(machine) list = list.filter(r=>r.machine_id === machine);
+  if(cat) list = list.filter(r=>r.category_label === cat);
+  if(from) list = list.filter(r=> new Date(r.created_at) >= from);
+  if(to) list = list.filter(r=> new Date(r.created_at) <= to);
+  if(txt) list = list.filter(r=>
+    (r.category_label || '').toLowerCase().includes(txt) ||
+    (r.choices || []).join(' ').toLowerCase().includes(txt) ||
+    (r.other || '').toLowerCase().includes(txt)
+  );
+  return list;
+}
+
+function renderTable(rows){
+  responsesTbody.innerHTML = '';
+  if(rows.length === 0){
+    responsesTbody.innerHTML = '<tr><td colspan="6">Aucune donnée</td></tr>';
+    return;
+  }
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const date = new Date(r.created_at).toLocaleString();
+    const client = r.client_id || '';
+    const machine = r.machine_id || '';
+    const cat = r.category_label || '';
+    const choices = (r.choices || []).join(', ');
+    const other = r.other || '';
+    tr.innerHTML = `<td>${date}</td><td>${client}</td><td>${machine}</td><td>${cat}</td><td>${choices}</td><td>${other}</td>`;
+    responsesTbody.appendChild(tr);
+  });
+}
+
+function aggregateForCategory(rows, categoryLabel){
+  const counts = {};
+  rows.forEach(r=>{
+    if(categoryLabel && r.category_label !== categoryLabel) return;
+    (r.choices || []).forEach(c=>{
+      counts[c] = (counts[c]||0) + 1;
+    });
+    if(r.other) counts[r.other] = (counts[r.other]||0) + 1;
+  });
+  // convert to sorted arrays
+  const items = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  return items;
+}
+
+function renderCharts(rows){
+  const cat = categoryFilter.value || quickCategory.value || null;
+  const data = aggregateForCategory(rows, cat);
+
+  const labels = data.map(d=>d[0]);
+  const values = data.map(d=>d[1]);
+
+  // Bar
+  const ctxBar = document.getElementById('barChart').getContext('2d');
+  if(barChart) barChart.destroy();
+  barChart = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Sélections', data: values, backgroundColor: 'rgba(59,130,246,0.8)' }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{maxRotation:45}}} }
+  });
+
+  // Pie
+  const ctxPie = document.getElementById('pieChart').getContext('2d');
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(ctxPie, {
+    type: 'pie',
+    data: { labels, datasets:[{ data: values }]},
+    options:{responsive:true}
+  });
+
+  // Top list
+  topList.innerHTML = '';
+  data.slice(0,5).forEach(([label, cnt])=>{
+    const el = document.createElement('div');
+    el.textContent = `${label} — ${cnt}`;
+    topList.appendChild(el);
+  });
+}
+
+function exportCSV(rows){
+  const header = ['id','created_at','client_id','machine_id','category','choices','other'];
+  const lines = [header.join(',')];
+  rows.forEach(r=>{
+    const line = [
+      `"${r.id}"`,
+      `"${r.created_at}"`,
+      `"${(r.client_id||'')}"`,
+      `"${(r.machine_id||'')}"`,
+      `"${(r.category_label||'')}"`,
+      `"${(r.choices||[]).join('|')}"`,
+      `"${(r.other||'')}"`,
+    ];
+    lines.push(line.join(','));
+  });
+  const blob = new Blob([lines.join('\\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `export_sondages_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportJSON(rows){
+  const blob = new Blob([JSON.stringify(rows, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `export_sondages_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+}
+
+// orchestrator
+async function refresh(){
+  const rows = await fetchAllResponses();
+  populateFilters();
+  const filtered = applyFilters();
+  renderTable(filtered);
+  renderCharts(filtered);
+}
+
+// events
+btnRefresh.addEventListener('click', refresh);
+btnExportCSV.addEventListener('click', ()=> exportCSV(applyFilters()));
+btnExportJSON.addEventListener('click', ()=> exportJSON(applyFilters()));
+clientFilter.addEventListener('change', ()=> { refresh(); });
+machineFilter.addEventListener('change', ()=> { refresh(); });
+categoryFilter.addEventListener('change', ()=> { refresh(); });
+quickCategory.addEventListener('change', ()=> {
+  categoryFilter.value = quickCategory.value;
+  refresh();
+});
+textSearch.addEventListener('input', ()=> { refresh(); });
+dateFrom.addEventListener('change', ()=> { refresh(); });
+dateTo.addEventListener('change', ()=> { refresh(); });
+
+document.getElementById('last-7').addEventListener('click', ()=>{
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-7);
+  dateFrom.value = from.toISOString().slice(0,10);
+  dateTo.value = to.toISOString().slice(0,10);
+  refresh();
+});
+document.getElementById('last-30').addEventListener('click', ()=>{
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-30);
+  dateFrom.value = from.toISOString().slice(0,10);
+  dateTo.value = to.toISOString().slice(0,10);
+  refresh();
+});
+document.getElementById('today').addEventListener('click', ()=>{
+  const now = new Date(); dateFrom.value = now.toISOString().slice(0,10); dateTo.value = now.toISOString().slice(0,10); refresh();
+});
+
+// init
+refresh();
+</script>
+</body>
+</html>
 
