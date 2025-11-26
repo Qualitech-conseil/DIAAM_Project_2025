@@ -1,5 +1,3 @@
-
-
 {
     "client_name": "Client 1",
     "logo": "logo.png",
@@ -19,7 +17,8 @@
                 "Produit G",
                 "Produit H",
                 "Produit I",
-                "Produit J"
+                "Produit J",
+                "Autre"
             ],
             "allow_other": true
         },
@@ -37,7 +36,8 @@
                 "Produit G",
                 "Produit H",
                 "Produit I",
-                "Produit J"
+                "Produit J",
+                "Autre"
             ],
             "allow_other": true
         }
