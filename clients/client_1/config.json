@@ -1,11 +1,11 @@
 {
-    "client_name": "Client_1",
+    "client_name": "Client 1",
     "logo": "logo.png",
     "questions_title": "Enquête de satisfaction",
     "categories": [
         {
-            "id": "Boissons",
-            "question": "Quelles boissons aimez-vous le plus ?",
+            "id": "cat_usage",
+            "question": "Quels produits utilisez-vous ?",
             "max_choices": 5,
             "options": [
                 "Produit A",
@@ -22,22 +22,23 @@
             "allow_other": true
         },
         {
-            "id": "Barre Choco",
-            "question": "Quelles Barre Choco aimezvous le plus ?",
+            "id": "cat_problemes",
+            "question": "Quels problèmes rencontrez-vous ?",
             "max_choices": 5,
             "options": [
-                "Produit A",
-                "Produit B",
-                "Produit C",
-                "Produit D",
-                "Produit E",
-                "Produit F",
-                "Produit G",
-                "Produit H",
-                "Produit I",
-                "Produit J"
+                "Bruit",
+                "Usure",
+                "Fuite",
+                "Blocage",
+                "Surchauffe",
+                "Vibrations",
+                "Performance",
+                "Panne ponctuelle",
+                "Panne régulière",
+                "Autre"
             ],
             "allow_other": true
         }
     ]
 }
+
