@@ -17,8 +17,8 @@
                 "Produit G",
                 "Produit H",
                 "Produit I",
-                "Produit J",
-                "Autre"
+                "Produit J"
+                
             ],
             "allow_other": true
         },
@@ -36,8 +36,8 @@
                 "Produit G",
                 "Produit H",
                 "Produit I",
-                "Produit J",
-                "Autre"
+                "Produit J"
+                
             ],
             "allow_other": true
         }
