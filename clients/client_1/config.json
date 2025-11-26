@@ -9,8 +9,8 @@
     "questions_title": "Enquête de satisfaction",
     "categories": [
         {
-            "id": "cat_usage",
-            "question": "Quels produits utilisez-vous ?",
+            "id": "Boissons",
+            "question": "Quelles boissons aimez-vous le plus ?",
             "max_choices": 5,
             "options": [
                 "Produit A",
@@ -27,20 +27,20 @@
             "allow_other": true
         },
         {
-            "id": "cat_problemes",
-            "question": "Quels problèmes rencontrez-vous ?",
+            "id": "Barre Choco",
+            "question": "Quelles Barre Choco aimezvous le plus ?",
             "max_choices": 5,
             "options": [
-                "Bruit",
-                "Usure",
-                "Fuite",
-                "Blocage",
-                "Surchauffe",
-                "Vibrations",
-                "Performance",
-                "Panne ponctuelle",
-                "Panne régulière",
-                "Autre"
+                "Produit A",
+                "Produit B",
+                "Produit C",
+                "Produit D",
+                "Produit E",
+                "Produit F",
+                "Produit G",
+                "Produit H",
+                "Produit I",
+                "Produit J"
             ],
             "allow_other": true
         }
