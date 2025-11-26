@@ -181,6 +181,7 @@
 
             const { error } = await supabaseClient.from("responses").insert({
                 client: clientId,
+                machine:machineId,
                 data: result,
                 created_at: new Date().toISOString()
             });
