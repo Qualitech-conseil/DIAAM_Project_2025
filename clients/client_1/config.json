@@ -4,7 +4,7 @@
     "questions_title": "Enquête de satisfaction",
     "categories": [
         {
-            "id": "cat_usage",
+            "id": "Boisson",
             "question": "Quelles Boissons aimeriez-vous en plus ?",
             "max_choices": 5,
             "options": [
@@ -23,7 +23,7 @@
             "allow_other": true
         },
         {
-            "id": "cat_problemes",
+            "id": "Barre Choco",
             "question": "Quelles Barres Choco aimeriez-vous en plus ?",
             "max_choices": 5,
             "options": [
