@@ -3,6 +3,14 @@
     "logo": "logo.png",
     "questions_title": "Enquête de satisfaction",
     "categories": [
+        
+        {
+          "id": "usage",
+          "question": "Quels produits utilisez-vous ?",
+          "options": ["Produit A", "Produit B", "Produit C"],
+          "allow_other": true
+        }
+        
         {
             "id": "Boisson",
             "question": "Quelles Boissons aimeriez-vous en plus ?",
