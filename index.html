@@ -1,254 +1,143 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Formulaire Sondage - Single Row Flattened</title>
-  <style>
-    body{font-family:Inter,Arial,Helvetica,sans-serif;background:#f6f9fc;padding:16px}
-    .container{max-width:840px;margin:0 auto}
-    img#client-logo{max-height:80px;display:block;margin:0 auto 12px}
-    h1{text-align:center}
-    .category{background:#fff;padding:12px;border-radius:10px;margin-bottom:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
-    .category h3{margin:0 0 8px}
-    .opts label{display:block;margin-bottom:6px}
-    .other-input{display:none;margin-left:8px;padding:6px;border-radius:6px;border:1px solid #e6eef8}
-    #submit-btn{display:none;margin-top:14px;padding:12px 16px;background:#2463d6;color:#fff;border:none;border-radius:8px;font-size:16px}
-    #status{margin-top:10px;color:#164e63}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulaire Sondage</title>
+    <link rel="stylesheet" href="style.css" />
 
-  <!-- Supabase client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
-  <div class="container">
-    <img id="client-logo" src="" alt="logo" />
-    <h1 id="form-title">Chargement du formulaire…</h1>
+    <div id="app">
+        <img id="client-logo" src="" alt="Logo"
+             style="max-width:150px; display:block; margin:0 auto 20px;" />
 
-    <div id="notice" style="text-align:center;color:#b91c1c"></div>
+        <h1 id="form-title">Chargement...</h1>
 
-    <form id="survey-form"></form>
+        <form id="survey-form"></form>
 
-    <div style="text-align:center">
-      <button id="submit-btn">Envoyer</button>
-      <div id="status"></div>
+        <button id="submit-btn" style="display:none; margin-top:20px;">Envoyer</button>
+
+        <p id="status"></p>
     </div>
-  </div>
 
-<script>
-/* ================== CONFIG - Remplace par tes valeurs ================== */
-const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
-/* ===================================================================== */
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const clientId = params.get("client");
+        const machineId = params.get("machine");
 
-const MAX_CATEGORIES = 10;    // option A: up to 10 categories always present in columns
-const MAX_CHOICES = 5;        // max per category (front+validation)
+        const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+        const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+        let CONFIG = null;
 
-// URL params
-const params = new URLSearchParams(window.location.search);
-const clientId = params.get('client');
-const machineId = params.get('machine');
+        async function loadConfig() {
+            const response = await fetch(`clients/${clientId}/config.json`);
+            CONFIG = await response.json();
 
-const formEl = document.getElementById('survey-form');
-const submitBtn = document.getElementById('submit-btn');
-const statusEl = document.getElementById('status');
-const logoEl = document.getElementById('client-logo');
-const titleEl = document.getElementById('form-title');
-const noticeEl = document.getElementById('notice');
+            document.getElementById("client-logo").src = CONFIG.logo;
+            document.getElementById("form-title").innerText = CONFIG.title;
 
-if(!clientId || !machineId){
-  noticeEl.innerText = "Paramètres manquants : ajoutez ?client=CLIENT_ID&machine=MACHINE_ID à l'URL.";
-  titleEl.innerText = "Paramètres manquants";
-  throw new Error("Missing client or machine in URL");
-}
+            buildForm(CONFIG.categories);
+            document.getElementById("submit-btn").style.display = "block";
+        }
 
-let CLIENT_CONFIG = null;   // loaded JSON
-// load client config
-async function loadClientConfig(){
-  try{
-    const res = await fetch(`clients/${clientId}/config.json`);
-    if(!res.ok) throw new Error("Config client introuvable");
-    CLIENT_CONFIG = await res.json();
-    // show logo/title
-    if(CLIENT_CONFIG.logo) logoEl.src = `clients/${clientId}/${CLIENT_CONFIG.logo}`;
-    titleEl.innerText = CLIENT_CONFIG.questions_title || (CLIENT_CONFIG.client_name || "Sondage");
-    buildForm();
-    submitBtn.style.display = 'inline-block';
-  }catch(err){
-    noticeEl.innerText = "Impossible de charger la configuration du client.";
-    console.error(err);
-  }
-}
+        function buildForm(categories) {
+            const form = document.getElementById("survey-form");
+            form.innerHTML = "";
 
-// build the form from CLIENT_CONFIG (but columns fixed up to MAX_CATEGORIES on submit)
-function buildForm(){
-  formEl.innerHTML = "";
-  const categories = CLIENT_CONFIG.categories || [];
+            categories.forEach(cat => {
+                const block = document.createElement("div");
+                block.className = "category";
+                block.dataset.category = cat.id;
 
-  // render actual categories present in config
-  categories.slice(0, MAX_CATEGORIES).forEach((cat, idx) => {
-    const block = document.createElement('div');
-    block.className = 'category';
-    block.dataset.catIndex = idx+1; // 1-based index for mapping to cat1..cat10
+                const title = document.createElement("h3");
+                title.innerText = cat.question;
+                block.appendChild(title);
 
-    const title = document.createElement('h3');
-    title.textContent = cat.question || (`Catégorie ${idx+1}`);
-    block.appendChild(title);
+                cat.options.forEach(opt => {
+                    const div = document.createElement("div");
+                    div.innerHTML = `
+                        <label>
+                            <input type="checkbox" name="${cat.id}" value="${opt}"> ${opt}
+                        </label>`;
+                    block.appendChild(div);
+                });
 
-    const optsDiv = document.createElement('div');
-    optsDiv.className = 'opts';
+                const other = document.createElement("div");
+                other.innerHTML = `
+                    <label>
+                        <input type="checkbox" name="${cat.id}" value="Autre"> Autre
+                    </label>
+                    <input type="text" id="other-${cat.id}" style="display:none" placeholder="Précisez">
+                `;
+                block.appendChild(other);
 
-    (cat.options || []).slice(0,10).forEach(opt => {
-      const id = `cat${idx+1}_opt_${sanitizeId(opt)}`;
-      const label = document.createElement('label');
-      label.innerHTML = `<input type="checkbox" data-cat="${idx+1}" value="${escapeHtml(opt)}"> ${escapeHtml(opt)}`;
-      optsDiv.appendChild(label);
-    });
+                form.appendChild(block);
+            });
 
-    // other checkbox + text
-    if(cat.allow_other !== false){ // default allow other
-      const otherWrap = document.createElement('div');
-      otherWrap.style.marginTop = '6px';
-      otherWrap.innerHTML = `
-        <label><input type="checkbox" data-cat="${idx+1}" value="__AUTRE__"> Autre</label>
-        <input type="text" id="cat${idx+1}_other" class="other-input" placeholder="Précisez">
-      `;
-      optsDiv.appendChild(otherWrap);
-    }
+            document.querySelectorAll("input[type='checkbox']").forEach(cb => {
+                cb.addEventListener("change", () => {
+                    if (cb.value === "Autre") {
+                        const input = document.getElementById(`other-${cb.name}`);
+                        input.style.display = cb.checked ? "inline-block" : "none";
+                    }
+                });
+            });
+        }
 
-    block.appendChild(optsDiv);
-    formEl.appendChild(block);
-  });
+        async function submitForm() {
+            const status = document.getElementById("status");
+            status.innerText = "";
 
-  // If config defines fewer than MAX_CATEGORIES, no visual fields for missing cats (option A),
-  // but we will still create empty columns on submit.
+            for (const cat of CONFIG.categories) {
+                const block = document.querySelector(`[data-category="${cat.id}"]`);
+                const selected = [...block.querySelectorAll("input[type=checkbox]:checked")].map(x => x.value);
 
-  // activation rules (delegated)
-  formEl.addEventListener('change', onFormChange);
-}
+                let otherValue = null;
+                if (selected.includes("Autre")) {
+                    otherValue = document.getElementById(`other-${cat.id}`).value;
+                }
 
-function onFormChange(e){
-  const el = e.target;
-  if(!el.dataset) return;
-  const catIndex = el.dataset.cat;
-  if(!catIndex) return;
+                const finalChoices = selected.filter(x => x !== "Autre");
+                if (otherValue) finalChoices.push(otherValue);
 
-  // manage "Autre" showing/hiding
-  if(el.value === "__AUTRE__"){
-    const otherField = document.getElementById(`cat${catIndex}_other`);
-    if(otherField) otherField.style.display = el.checked ? 'inline-block' : 'none';
-  }
+                // Pad to 5 cols
+                const padded = [
+                    finalChoices[0] || null,
+                    finalChoices[1] || null,
+                    finalChoices[2] || null,
+                    finalChoices[3] || null,
+                    finalChoices[4] || null
+                ];
 
-  // enforce max choices per category
-  const block = formEl.querySelector(`div.category[data-cat-index="${catIndex}"]`);
-  // if block not found (shouldn't happen) find any input data-cat
-  const allCheckboxes = formEl.querySelectorAll(`input[type="checkbox"][data-cat="${catIndex}"]`);
-  const checked = Array.from(allCheckboxes).filter(c => c.checked);
-  if(checked.length > MAX_CHOICES){
-    // undo latest change (el)
-    el.checked = false;
-    alert(`Vous pouvez sélectionner au maximum ${MAX_CHOICES} produits dans cette catégorie.`);
-  }
-}
+                await supabaseClient.from("survey_results").insert({
+                    client_id: clientId,
+                    machine_id: machineId,
+                    category: cat.id,
+                    question: cat.question,
+                    choice_1: padded[0],
+                    choice_2: padded[1],
+                    choice_3: padded[2],
+                    choice_4: padded[3],
+                    choice_5: padded[4],
+                    created_at: new Date().toISOString()
+                });
+            }
 
-// helper: sanitize id fragments
-function sanitizeId(s){
-  return s.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_-]/g,'').toLowerCase();
-}
-function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+            status.innerText = "Merci, vos réponses ont été enregistrées.";
+            document.getElementById("submit-btn").disabled = true;
+        }
 
-// build payload with fixed columns up to MAX_CATEGORIES
-function buildPayload(){
-  // initialize base payload
-  const payload = {
-    client: clientId,
-    machine: machineId,
-    created_at: new Date().toISOString()
-  };
+        document.getElementById("submit-btn").addEventListener("click", submitForm);
+        loadConfig();
+    </script>
+</body>
+</html>
 
-  const categories = CLIENT_CONFIG.categories || [];
-
-  for(let i=1;i<=MAX_CATEGORIES;i++){
-    const colPrefix = `cat${i}_`;
-    const cat = categories[i-1]; // may be undefined
-
-    if(cat){
-      // category present
-      payload[colPrefix + 'id'] = cat.id || null;
-      payload[colPrefix + 'category'] = cat.id || null; // you asked for category + question; using id as category
-      payload[colPrefix + 'question'] = cat.question || null;
-
-      // collect selected values for this category (checkboxes with data-cat = i)
-      const checkboxes = Array.from(formEl.querySelectorAll(`input[type="checkbox"][data-cat="${i}"]`));
-      const selected = checkboxes.filter(c=>c.checked && c.value !== "__AUTRE__").map(c=>c.value);
-
-      // pick up to MAX_CHOICES
-      for(let k=1;k<=MAX_CHOICES;k++){
-        const key = colPrefix + 'choice' + k;
-        payload[key] = selected[k-1] || null;
-      }
-
-      // other
-      const otherField = document.getElementById(`${colPrefix}other`);
-      payload[colPrefix + 'other'] = (otherField && otherField.value.trim()) ? otherField.value.trim() : null;
-    } else {
-      // category not defined in config -> fill nulls
-      payload[colPrefix + 'id'] = null;
-      payload[colPrefix + 'category'] = null;
-      payload[colPrefix + 'question'] = null;
-      for(let k=1;k<=MAX_CHOICES;k++){
-        payload[colPrefix + 'choice' + k] = null;
-      }
-      payload[colPrefix + 'other'] = null;
-    }
-  }
-
-  return payload;
-}
-
-// submit handler
-async function onSubmit(e){
-  e.preventDefault();
-  statusEl.style.color = '#164e63';
-  statusEl.innerText = 'Envoi en cours...';
-
-  // basic validation: at least one selected overall
-  const anyChecked = formEl.querySelectorAll('input[type="checkbox"]:checked').length > 0;
-  if(!anyChecked){
-    statusEl.style.color = '#b91c1c';
-    statusEl.innerText = "Sélectionnez au moins un produit.";
-    return;
-  }
-
-  const payload = buildPayload();
-
-  // Insert into survey_flat table (single line)
-  try{
-    const { data, error } = await supabase.from('survey_flat').insert([payload]);
-    if(error){
-      console.error(error);
-      statusEl.style.color = '#b91c1c';
-      statusEl.innerText = 'Erreur lors de l\'enregistrement : ' + (error.message || JSON.stringify(error));
-      return;
-    }
-
-    statusEl.style.color = '#0f5132';
-    statusEl.innerText = 'Merci — vos réponses ont été enregistrées.';
-    submitBtn.disabled = true;
-  }catch(err){
-    console.error(err);
-    statusEl.style.color = '#b91c1c';
-    statusEl.innerText = 'Erreur inattendue : ' + (err.message || err);
-  }
-}
-
-// init
-submitBtn.addEventListener('click', onSubmit);
-loadClientConfig();
-
-</script>
 </body>
 </html>
 
