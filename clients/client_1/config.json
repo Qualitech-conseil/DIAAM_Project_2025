@@ -6,8 +6,7 @@
         {
             "id": "Boisson",
             "question": "Quelles Boissons aimeriez-vous en plus ?",
-            "max_choices": 5,
-            "options": [
+             "options": [
                 "Produit A",
                 "Produit B",
                 "Produit C",
