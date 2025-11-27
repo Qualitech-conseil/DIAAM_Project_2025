@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <h1>Dashboard Résultats Sondages</h1>
+
+    <div id="login-section">
+        <h2>Connexion Admin</h2>
+        <input id="email" type="email" placeholder="Email admin"><br>
+        <input id="password" type="password" placeholder="Mot de passe"><br>
+        <button id="login-btn">Connexion</button>
+        <p id="login-status"></p>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+        <button id="logout-btn">Déconnexion</button>
+
+        <h2>Résultats</h2>
+
+        <table id="results-table">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Machine</th>
+                    <th>Catégorie</th>
+                    <th>Question</th>
+                    <th>Choix 1</th>
+                    <th>Choix 2</th>
+                    <th>Choix 3</th>
+                    <th>Choix 4</th>
+                    <th>Choix 5</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
