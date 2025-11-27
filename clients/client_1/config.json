@@ -73,7 +73,7 @@
 
   "dashboard": {
     "adminUsers": [
-      "admin@example.com"
+      "thierry.hocquerelle@yahoo.fr"
     ],
     "tableName": "survey_results",
     "columns": {
