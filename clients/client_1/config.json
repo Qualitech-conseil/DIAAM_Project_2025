@@ -23,7 +23,6 @@
         {
             "id": "Barre Choco",
             "question": "Quelles Barres Choco aimeriez-vous en plus ?",
-            "max_choices": 5,
             "options": [
                 "Produit A",
                 "Produit B",
