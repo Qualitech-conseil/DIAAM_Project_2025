@@ -1,49 +1,93 @@
 {
-    "client_name": "Client 1",
-    "logo": "logo.png",
-    "questions_title": "Enquête de satisfaction",
-    "categories": [
-        
+  "supabase": {
+    "url": "https://vawvmiosgslvykfqxffs.supabase.co",
+    "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"
+  },
+
+  "clients": [
+    {
+      "id": "client_1",
+      "name": "Client 1"
+    },
+    {
+      "id": "client_2",
+      "name": "Client 2"
+    }
+  ],
+
+  "categories": [
+    {
+      "id": "cat1",
+      "label": "Sécurité",
+      "questions": [
         {
-          "id": "usage",
-          "question": "Quels produits utilisez-vous ?",
-          "options": ["Produit A", "Produit B", "Produit C"],
-          "allow_other": true
-        }
-        
-        {
-            "id": "Boisson",
-            "question": "Quelles Boissons aimeriez-vous en plus ?",
-             "options": [
-                "Produit A",
-                "Produit B",
-                "Produit C",
-                "Produit D",
-                "Produit E",
-                "Produit F",
-                "Produit G",
-                "Produit H",
-                "Produit I",
-                "Produit J"
-            ],
-            "allow_other": true
+          "id": "q1",
+          "label": "Le personnel est-il correctement équipé ?",
+          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
         },
         {
-            "id": "Barre Choco",
-            "question": "Quelles Barres Choco aimeriez-vous en plus ?",
-            "options": [
-                "Produit A",
-                "Produit B",
-                "Produit C",
-                "Produit D",
-                "Produit E",
-                "Produit F",
-                "Produit G",
-                "Produit H",
-                "Produit I",
-                "Produit J"
-            ],
-            "allow_other": true
+          "id": "q2",
+          "label": "Les zones de danger sont-elles signalées ?",
+          "choices": ["Oui", "Non", "Parfois", "Non applicable"]
         }
-    ]
+      ]
+    },
+
+    {
+      "id": "cat2",
+      "label": "Production",
+      "questions": [
+        {
+          "id": "q3",
+          "label": "La machine est-elle opérationnelle ?",
+          "choices": ["Oui", "Non", "Intermittent", "Non applicable"]
+        },
+        {
+          "id": "q4",
+          "label": "Le rendement est-il conforme ?",
+          "choices": ["Oui", "Non", "Variable", "Non applicable"]
+        }
+      ]
+    },
+
+    {
+      "id": "cat3",
+      "label": "Nettoyage",
+      "questions": [
+        {
+          "id": "q5",
+          "label": "L'équipement est-il propre ?",
+          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+        }
+      ]
+    },
+
+    { "id": "cat4", "label": "Maintenance", "questions": [] },
+    { "id": "cat5", "label": "Énergie", "questions": [] },
+    { "id": "cat6", "label": "Calibration", "questions": [] },
+    { "id": "cat7", "label": "Sécurité incendie", "questions": [] },
+    { "id": "cat8", "label": "Approvisionnement", "questions": [] },
+    { "id": "cat9", "label": "Postes opérateurs", "questions": [] },
+    { "id": "cat10", "label": "Environnement", "questions": [] }
+  ],
+
+  "dashboard": {
+    "adminUsers": [
+      "admin@example.com"
+    ],
+    "tableName": "survey_results",
+    "columns": {
+      "id": "id",
+      "clientId": "client_id",
+      "machineId": "machine_id",
+      "category": "category",
+      "question": "question",
+      "choice1": "choice_1",
+      "choice2": "choice_2",
+      "choice3": "choice_3",
+      "choice4": "choice_4",
+      "choice5": "choice_5",
+      "createdAt": "created_at"
+    }
+  }
 }
