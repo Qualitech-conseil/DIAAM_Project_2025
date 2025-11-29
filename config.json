@@ -17,13 +17,7 @@
         {
           "id": "q1",
           "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
-          "choices": 
-          [
-            "Coca light", 
-            "Coca", 
-            "Orangina", 
-            "Icetea"
-          ]
+          "choices": ["Coca light", "Coca", "Orangina", "Icetea"]
         },
         {
           "id": "q2",
