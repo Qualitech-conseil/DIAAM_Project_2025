@@ -6,6 +6,7 @@
 
   "clients": [
     { "id": "client_1", "name": "Client 1" },
+    { "id": "client_2", "name": "Client 2" },
   ],
 
   "categories": [
