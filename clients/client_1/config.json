@@ -1,14 +1,12 @@
-
+{
+  "supabase": {
+    "url": "https://vawvmiosgslvykfqxffs.supabase.co",
+    "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"
+  },
 
   "clients": [
-    {
-      "id": "client_1",
-      "name": "Client 1"
-    },
-    {
-      "id": "client_2",
-      "name": "Client 2"
-    }
+    { "id": "client_1", "name": "Client 1" },
+    { "id": "client_2", "name": "Client 2" }
   ],
 
   "categories": [
@@ -28,7 +26,6 @@
         }
       ]
     },
-
     {
       "id": "cat2",
       "label": "Production",
@@ -45,7 +42,6 @@
         }
       ]
     },
-
     {
       "id": "cat3",
       "label": "Nettoyage",
@@ -57,7 +53,6 @@
         }
       ]
     },
-
     { "id": "cat4", "label": "Maintenance", "questions": [] },
     { "id": "cat5", "label": "Énergie", "questions": [] },
     { "id": "cat6", "label": "Calibration", "questions": [] },
