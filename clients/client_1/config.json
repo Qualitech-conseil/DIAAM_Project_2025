@@ -19,11 +19,7 @@
           "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
           "choices": ["Coca light", "Coca", "Orangina", "Icetea"]
         },
-      //  {
-          "id": "q2",
-          "label": "Les zones de danger sont-elles signalées ?",
-          "choices": ["Oui", "Non", "Parfois", "Non applicable"]
-        }//
+       
       ]
     },
     {
@@ -35,11 +31,7 @@
           "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
           "choices": ["Oui", "Non", "Intermittent", "Non applicable"]
         },
-     //   {
-          "id": "q4",
-          "label": "Le rendement est-il conforme ?",
-          "choices": ["Oui", "Non", "Variable", "Non applicable"]
-        }//
+    
       ]
     },
     {
