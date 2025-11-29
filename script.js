@@ -171,28 +171,37 @@ async function submitForm() {
     CLIENT_CONFIG.categories.forEach(cat => {
         cat.questions.forEach(question => {
             const qBlock = form.querySelector(`[data-category="${cat.id}"][data-question="${question.id}"]`);
-            const selected = Array.from(qBlock.querySelectorAll("input[type='checkbox']:checked"));
+            if (!qBlock) return;
 
-            const values = selected.map(s => s.value);
-            const otherValue = values.includes("Autre")
-                ? document.getElementById(`other-${cat.id}-${question.id}`).value
-                : null;
+            // Liste des cases cochées
+            const selectedInputs = Array.from(qBlock.querySelectorAll("input[type='checkbox']:checked"));
 
+            // Tableau des VALUES (pas des inputs)
+            const values = selectedInputs.map(input => {
+                if (input.value === "Autre") {
+                    const txt = document.getElementById(`other-${cat.id}-${question.id}`).value;
+                    return "Autre : " + txt;
+                }
+                return input.value;
+            });
+
+            // Construction de l'objet à insérer
             dataToInsert.push({
                 client_id: clientId,
                 machine_id: machineId,
                 category: cat.label,
                 question: question.label,
-                choice_1: selected[0] || null,
-                choice_2: selected[1] || null,
-                choice_3: selected[2] || null,
-                choice_4: selected[3] || null,
-                choice_5: selected[4] || null,
-                other: otherValue,
+                choice_1: values[0] || null,
+                choice_2: values[1] || null,
+                choice_3: values[2] || null,
+                choice_4: values[3] || null,
+                choice_5: values[4] || null,
                 created_at: new Date().toISOString()
             });
         });
     });
+
+    console.log("Données envoyées →", dataToInsert);
 
     const { error } = await supabaseClient.from("survey_results").insert(dataToInsert);
 
@@ -204,6 +213,7 @@ async function submitForm() {
         document.getElementById("submit-btn").disabled = true;
     }
 }
+
 
 // ---------------- INIT ----------------
 document.getElementById("submit-btn").addEventListener("click", submitForm);
