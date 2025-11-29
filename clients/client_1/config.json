@@ -12,46 +12,54 @@
   "categories": [
     {
       "id": "cat1",
-      "label": "Boisson",
+      "label": "Sécurité",
       "questions": [
         {
           "id": "q1",
-          "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
-          "choices": ["Coca light", "Coca", "Orangina", "Icetea"]
+          "label": "Le personnel est-il correctement équipé ?",
+          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+        },
+        {
+          "id": "q2",
+          "label": "Les zones de danger sont-elles signalées ?",
+          "choices": ["Oui", "Non", "Parfois", "Non applicable"]
         }
-       
       ]
     },
     {
       "id": "cat2",
-      "label": "Barre Choco",
+      "label": "Production",
       "questions": [
         {
           "id": "q3",
-          "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
+          "label": "La machine est-elle opérationnelle ?",
           "choices": ["Oui", "Non", "Intermittent", "Non applicable"]
+        },
+        {
+          "id": "q4",
+          "label": "Le rendement est-il conforme ?",
+          "choices": ["Oui", "Non", "Variable", "Non applicable"]
         }
-    
       ]
     },
     {
       "id": "cat3",
-      "label": "Salée",
+      "label": "Nettoyage",
       "questions": [
         {
           "id": "q5",
-          "label": "Quel produit salée aimeriez-vous voir ?",
-          "choices": ["Cacahuéte", "Non", "Partiel", "Non applicable"]
+          "label": "L'équipement est-il propre ?",
+          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
         }
       ]
     },
-    { "id": "cat4", "label": "Autre1", "questions": [] },
-    { "id": "cat5", "label": "Autre2", "questions": [] },
-    { "id": "cat6", "label": "Autre3", "questions": [] },
-    { "id": "cat7", "label": "Autre4", "questions": [] },
-    { "id": "cat8", "label": "Autre5", "questions": [] },
-    { "id": "cat9", "label": "Autre6", "questions": [] },
-    { "id": "cat10", "label": "Autre7", "questions": [] }
+    { "id": "cat4", "label": "Maintenance", "questions": [] },
+    { "id": "cat5", "label": "Énergie", "questions": [] },
+    { "id": "cat6", "label": "Calibration", "questions": [] },
+    { "id": "cat7", "label": "Sécurité incendie", "questions": [] },
+    { "id": "cat8", "label": "Approvisionnement", "questions": [] },
+    { "id": "cat9", "label": "Postes opérateurs", "questions": [] },
+    { "id": "cat10", "label": "Environnement", "questions": [] }
   ],
 
   "dashboard": {
@@ -74,3 +82,4 @@
     }
   }
 }
+
