@@ -32,7 +32,7 @@
       "questions": [
         {
           "id": "q3",
-          "label": "La machine est-elle opérationnelle ?",
+          "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
           "choices": ["Oui", "Non", "Intermittent", "Non applicable"]
         },
         {
