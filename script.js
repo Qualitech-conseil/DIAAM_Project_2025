@@ -1,7 +1,3 @@
-// ---------------- SUPABASE ----------------
-const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"; // ton anon key
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ---------------- PARAMÈTRES CLIENT ----------------
 const urlParams = new URLSearchParams(window.location.search);
@@ -11,7 +7,12 @@ const machineId = urlParams.get("machine");
 if (!clientId || !machineId) {
     document.getElementById("app").innerHTML =
         "<p>Aucun client ou machine spécifié. Ajoutez ?client=xxx&machine=yyy dans l'URL.</p>";
+    throw new Error("Client ou machine manquant"); // stoppe l'exécution
 }
+// ---------------- SUPABASE ----------------
+const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"; // ton anon key
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ---------------- VARIABLES GLOBALES ----------------
 let CLIENT_CONFIG = null;
