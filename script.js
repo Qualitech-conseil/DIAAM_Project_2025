@@ -187,7 +187,7 @@ async function submitForm() {
                 choice_2: selected[1] || null,
                 choice_3: selected[2] || null,
                 choice_4: selected[3] || null,
-                choice_5: selected[4] || (otherValue ? "Autre: " + otherValue : null),
+                choice_5: selected[4] || null,
                 other: otherValue,
                 created_at: new Date().toISOString()
             });
