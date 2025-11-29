@@ -20,7 +20,7 @@ let CLIENT_CONFIG = null;
 // ---------------- CHARGEMENT CONFIG ----------------
 async function loadConfig() {
     try {
-        const response = await fetch(`clients/${clientId}/config.json`)
+        const response = await fetch(`client/${clientId}/config.json`)
         if (!res.ok) throw new Error("Impossible de charger la config");
         CLIENT_CONFIG = await res.json();
 
