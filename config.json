@@ -12,12 +12,18 @@
   "categories": [
     {
       "id": "cat1",
-      "label": "Sécurité",
+      "label": "Boisson",
       "questions": [
         {
           "id": "q1",
-          "label": "Le personnel est-il correctement équipé ?",
-          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+          "label": "Quelle boisson aimeriez-vous voir prochainement içi ?",
+          "choices": 
+          [
+            "Coca light", 
+            "Coca", 
+            "Orangina", 
+            "Icetea"
+          ]
         },
         {
           "id": "q2",
@@ -28,7 +34,7 @@
     },
     {
       "id": "cat2",
-      "label": "Production",
+      "label": "Barre Choco",
       "questions": [
         {
           "id": "q3",
@@ -44,22 +50,22 @@
     },
     {
       "id": "cat3",
-      "label": "Nettoyage",
+      "label": "Salée",
       "questions": [
         {
           "id": "q5",
-          "label": "L'équipement est-il propre ?",
-          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+          "label": "Quel produit salée aimeriez-vous voir ?",
+          "choices": ["Cacahuéte", "Non", "Partiel", "Non applicable"]
         }
       ]
     },
-    { "id": "cat4", "label": "Maintenance", "questions": [] },
-    { "id": "cat5", "label": "Énergie", "questions": [] },
-    { "id": "cat6", "label": "Calibration", "questions": [] },
-    { "id": "cat7", "label": "Sécurité incendie", "questions": [] },
-    { "id": "cat8", "label": "Approvisionnement", "questions": [] },
-    { "id": "cat9", "label": "Postes opérateurs", "questions": [] },
-    { "id": "cat10", "label": "Environnement", "questions": [] }
+    { "id": "cat4", "label": "Autre1", "questions": [] },
+    { "id": "cat5", "label": "Autre2", "questions": [] },
+    { "id": "cat6", "label": "Autre3", "questions": [] },
+    { "id": "cat7", "label": "Autre4", "questions": [] },
+    { "id": "cat8", "label": "Autre5", "questions": [] },
+    { "id": "cat9", "label": "Autre6", "questions": [] },
+    { "id": "cat10", "label": "Autre7", "questions": [] }
   ],
 
   "dashboard": {
