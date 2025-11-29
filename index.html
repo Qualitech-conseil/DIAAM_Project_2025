@@ -68,58 +68,59 @@ function buildForm(categories) {
         catBlock.appendChild(catTitle);
 
         // chaque question dans la catégorie
-        cat.questions.forEach(question => {
-            
-            const qBlock = document.createElement("div");
-            qBlock.className = "question-block";
-            qBlock.dataset.category = cat.id;
-            qBlock.dataset.question = question.id;
+cat.questions.forEach(question => {
+    
+    const qBlock = document.createElement("div");
+    qBlock.className = "question-block";
+    qBlock.dataset.category = cat.id;
+    qBlock.dataset.question = question.id;
 
-            const qLabel = document.createElement("h3");
-            qLabel.innerText = question.label;
-            qBlock.appendChild(qLabel);
+    // *** AJOUTER ICI LE STYLE VERTICAL ***
+    qBlock.style.display = "flex";
+    qBlock.style.flexDirection = "column";
+    qBlock.style.gap = "8px"; // espacement vertical
 
+    // titre de la question
+    const qLabel = document.createElement("h3");
+    qLabel.innerText = question.label;
+    qBlock.appendChild(qLabel);
 
-
-
-            
-            // choix
-            question.choices.forEach(choice => {
-                const line = document.createElement("label");
-                line.innerHTML = `
-                    <input type="checkbox"
-                        class="choice"
-                        data-category="${cat.id}"
-                        data-question="${question.id}"
-                        value="${choice}">
-                    ${choice}
-                `;
-                qBlock.appendChild(line);
-            });
-
-            // AUTRE
-            const htmlAutre = document.createElement("div");
-            htmlAutre.innerHTML = `
-                <label>
-                    <input type="checkbox"
-                        class="choice"
-                        data-category="${cat.id}"
-                        data-question="${question.id}"
-                        value="Autre">
-                    Autre
-                </label>
-                <input type="text"
-                       id="other-${cat.id}-${question.id}"
-                       placeholder="Précisez"
-                       style="display:none; margin-left:10px;">
-            `;
-            qBlock.appendChild(htmlAutre);
-
-            catBlock.appendChild(qBlock);
-        });
-
-        form.appendChild(catBlock);
+    // choix
+    question.choices.forEach(choice => {
+        const line = document.createElement("label");
+        line.innerHTML = `
+            <input type="checkbox"
+                class="choice"
+                data-category="${cat.id}"
+                data-question="${question.id}"
+                value="${choice}">
+            ${choice}
+        `;
+        qBlock.appendChild(line);
     });
+
+    // AUTRE
+    const htmlAutre = document.createElement("div");
+    htmlAutre.innerHTML = `
+        <label>
+            <input type="checkbox"
+                class="choice"
+                data-category="${cat.id}"
+                data-question="${question.id}"
+                value="Autre">
+            Autre
+        </label>
+        <input type="text"
+               id="other-${cat.id}-${question.id}"
+               placeholder="Précisez"
+               style="display:none; margin-left:10px;">
+    `;
+    qBlock.appendChild(htmlAutre);
+
+    catBlock.appendChild(qBlock);
+});
+
+form.appendChild(catBlock);
 
     activateRules();
 }
