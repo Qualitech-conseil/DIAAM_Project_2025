@@ -12,54 +12,54 @@
   "categories": [
     {
       "id": "cat1",
-      "label": "Sécurité",
+      "label": "Boisson",
       "questions": [
         {
           "id": "q1",
-          "label": "Le personnel est-il correctement équipé ?",
-          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+          "label": "Quelle boisson aimeriez-vous en plus ?",
+          "choices": ["Coca light", "Coca", "IceTea", "Orangina"]
         },
         {
           "id": "q2",
-          "label": "Les zones de danger sont-elles signalées ?",
-          "choices": ["Oui", "Non", "Parfois", "Non applicable"]
+          "label": "Quelle boisson consommez-vous le plus ?",
+          "choices": ["Coca light", "Coca", "IceTea", "Orangina"]
         }
       ]
     },
     {
       "id": "cat2",
-      "label": "Production",
+      "label": "Barre Choco",
       "questions": [
         {
           "id": "q3",
-          "label": "La machine est-elle opérationnelle ?",
-          "choices": ["Oui", "Non", "Intermittent", "Non applicable"]
+          "label": "Quelle barre Choco aimeriez-vous en plus ?",
+          "choices": ["Mars", "Lion", "Nuts", "Barre NRJ"]
         },
         {
           "id": "q4",
-          "label": "Le rendement est-il conforme ?",
-          "choices": ["Oui", "Non", "Variable", "Non applicable"]
+          "label": "Quelle Barre Choco consommez-vous le plus ?",
+          "choices": ["Mars", "Lion", "Nuts", "Barre NRJ"]
         }
       ]
     },
     {
       "id": "cat3",
-      "label": "Nettoyage",
+      "label": "Salée",
       "questions": [
         {
           "id": "q5",
-          "label": "L'équipement est-il propre ?",
-          "choices": ["Oui", "Non", "Partiel", "Non applicable"]
+          "label": "Quelle produit Salée aimeriez-vous en plus ?",
+          "choices": ["cacahuéte", "Gateaux apéro", "Produit1", "Produit2"]
         }
       ]
     },
-    { "id": "cat4", "label": "Maintenance", "questions": [] },
-    { "id": "cat5", "label": "Énergie", "questions": [] },
-    { "id": "cat6", "label": "Calibration", "questions": [] },
-    { "id": "cat7", "label": "Sécurité incendie", "questions": [] },
-    { "id": "cat8", "label": "Approvisionnement", "questions": [] },
-    { "id": "cat9", "label": "Postes opérateurs", "questions": [] },
-    { "id": "cat10", "label": "Environnement", "questions": [] }
+    { "id": "cat4", "label": "Autre4", "questions": [] },
+    { "id": "cat5", "label": "Autre5", "questions": [] },
+    { "id": "cat6", "label": "Autre6", "questions": [] },
+    { "id": "cat7", "label": "Autre7", "questions": [] },
+    { "id": "cat8", "label": "Autre8", "questions": [] },
+    { "id": "cat9", "label": "Autre9", "questions": [] },
+    { "id": "cat10", "label": "Autre10", "questions": [] }
   ],
 
   "dashboard": {
