@@ -183,7 +183,11 @@ async function submitForm() {
                 machine_id: machineId,
                 category: cat.label,
                 question: question.label,
-                choices: values,
+                choice_1: selected[0] || null,
+                choice_2: selected[1] || null,
+                choice_3: selected[2] || null,
+                choice_4: selected[3] || null,
+                choice_5: selected[4] || (otherValue ? "Autre: " + otherValue : null),
                 other: otherValue,
                 created_at: new Date().toISOString()
             });
