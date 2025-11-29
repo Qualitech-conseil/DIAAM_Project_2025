@@ -6,7 +6,7 @@ let supabaseClient = null;
 --------------------------- */
 async function loadConfig() {
     try {
-        const res = await fetch('../config.json');
+        const res = await fetch(`./clients/${clientId}/config.json`);
         CONFIG = await res.json();
 
         // Init Supabase
