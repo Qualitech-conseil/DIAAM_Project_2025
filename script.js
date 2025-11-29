@@ -1,151 +1,225 @@
-let CONFIG = null;
-let supabaseClient = null;
+// ---------------- SUPABASE ----------------
+const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"; // ton anon key
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-/* --------------------------
-   1. CHARGEMENT DU CONFIG.JSON
---------------------------- */
+// ---------------- PARAMÈTRES CLIENT ----------------
+const urlParams = new URLSearchParams(window.location.search);
+const clientId = urlParams.get("client");
+const machineId = urlParams.get("machine");
+
+if (!clientId || !machineId) {
+    document.getElementById("app").innerHTML =
+        "<p>Aucun client ou machine spécifié. Ajoutez ?client=xxx&machine=yyy dans l'URL.</p>";
+}
+
+// ---------------- VARIABLES GLOBALES ----------------
+let CLIENT_CONFIG = null;
+
+// ---------------- CHARGEMENT CONFIG ----------------
 async function loadConfig() {
     try {
-        const res = await fetch(`./clients/${clientId}/config.json`);
-        CONFIG = await res.json();
+        const res = await fetch(`clients/${clientId}/config.json`);
+        if (!res.ok) throw new Error("Impossible de charger la config");
+        CLIENT_CONFIG = await res.json();
 
-        // Init Supabase
-        supabaseClient = window.supabase.createClient(
-            CONFIG.supabase.url,
-            CONFIG.supabase.anonKey
-        );
+        // logo et titre
+        document.getElementById("client-logo").src = CLIENT_CONFIG.logo || "";
+        document.getElementById("form-title").innerText = CLIENT_CONFIG.title || "Sondage";
 
-        initForm();
+        buildForm(CLIENT_CONFIG.categories);
+
+        document.getElementById("submit-btn").style.display = "block";
     } catch (err) {
-        console.error("Erreur chargement config.json :", err);
-        alert("Impossible de charger la configuration.");
+        console.error(err);
+        document.getElementById("app").innerHTML =
+            "<p>Erreur de configuration. Vérifiez le fichier config.json.</p>";
     }
 }
 
-/* --------------------------
-   2. INITIALISATION DU FORMULAIRE
---------------------------- */
-function initForm() {
-    const categoriesContainer = document.getElementById("categories-container");
+// ---------------- BUILD FORM ----------------
+function buildForm(categories) {
+    const form = document.getElementById("survey-form");
+    form.innerHTML = "";
 
-    CONFIG.categories.forEach(cat => {
-        if (!cat.questions || cat.questions.length === 0) return;
+    categories.forEach(cat => {
+        const catBlock = document.createElement("div");
+        catBlock.className = "category-block";
 
-        let block = document.createElement("div");
-        block.className = "category-block";
-        block.innerHTML = `<h3>${cat.label}</h3>`;
+        const catTitle = document.createElement("h2");
+        catTitle.innerText = cat.label || cat.id || "Catégorie";
+        catBlock.appendChild(catTitle);
+
+        if (!Array.isArray(cat.questions) || cat.questions.length === 0) {
+            const empty = document.createElement("div");
+            empty.style.color = "#666";
+            empty.style.fontSize = "0.95rem";
+            empty.innerText = "Aucune question définie.";
+            catBlock.appendChild(empty);
+            form.appendChild(catBlock);
+            return;
+        }
 
         cat.questions.forEach(question => {
-            let qDiv = document.createElement("div");
-            qDiv.className = "question-block";
+            const qBlock = document.createElement("div");
+            qBlock.className = "question-block";
+            qBlock.dataset.category = cat.id;
+            qBlock.dataset.question = question.id;
+            qBlock.style.display = "flex";
+            qBlock.style.flexDirection = "column";
+            qBlock.style.gap = "8px";
+            qBlock.style.padding = "8px 6px";
+            qBlock.style.borderBottom = "1px solid #eee";
 
-            let html = `
-                <label><strong>${question.label}</strong></label>
-                <select class="choice-select" data-category="${cat.id}" data-question="${question.id}">
-                    <option value="">-- Choisissez --</option>
-            `;
+            const qLabel = document.createElement("h3");
+            qLabel.innerText = question.label || question.id;
+            qBlock.appendChild(qLabel);
 
-            question.choices.forEach(choice => {
-                html += `<option value="${choice}">${choice}</option>`;
+            const optsContainer = document.createElement("div");
+            optsContainer.style.display = "flex";
+            optsContainer.style.flexDirection = "column";
+            optsContainer.style.gap = "6px";
+
+            const choices = Array.isArray(question.choices) ? question.choices : [];
+            choices.forEach(choice => {
+                const label = document.createElement("label");
+                label.style.display = "flex";
+                label.style.alignItems = "center";
+                label.style.gap = "8px";
+
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.className = "choice";
+                input.dataset.category = cat.id;
+                input.dataset.question = question.id;
+                input.value = choice;
+
+                const text = document.createElement("span");
+                text.innerText = choice;
+
+                label.appendChild(input);
+                label.appendChild(text);
+                optsContainer.appendChild(label);
             });
 
-            html += "</select>";
+            // AUTRE
+            const otherWrapper = document.createElement("div");
+            otherWrapper.style.display = "flex";
+            otherWrapper.style.alignItems = "center";
+            otherWrapper.style.gap = "8px";
+            otherWrapper.style.marginTop = "6px";
 
-            qDiv.innerHTML = html;
-            block.appendChild(qDiv);
+            const otherLabel = document.createElement("label");
+            otherLabel.style.display = "flex";
+            otherLabel.style.alignItems = "center";
+            otherLabel.style.gap = "8px";
+
+            const otherCheckbox = document.createElement("input");
+            otherCheckbox.type = "checkbox";
+            otherCheckbox.className = "choice";
+            otherCheckbox.dataset.category = cat.id;
+            otherCheckbox.dataset.question = question.id;
+            otherCheckbox.value = "Autre";
+
+            const otherTextLabel = document.createElement("span");
+            otherTextLabel.innerText = "Autre";
+
+            otherLabel.appendChild(otherCheckbox);
+            otherLabel.appendChild(otherTextLabel);
+
+            const otherInput = document.createElement("input");
+            otherInput.type = "text";
+            otherInput.id = `other-${cat.id}-${question.id}`;
+            otherInput.placeholder = "Précisez";
+            otherInput.style.display = "none";
+            otherInput.style.flex = "1";
+
+            otherWrapper.appendChild(otherLabel);
+            otherWrapper.appendChild(otherInput);
+            optsContainer.appendChild(otherWrapper);
+
+            qBlock.appendChild(optsContainer);
+            catBlock.appendChild(qBlock);
         });
 
-        categoriesContainer.appendChild(block);
+        form.appendChild(catBlock);
     });
+
+    activateRules();
 }
 
-/* --------------------------
-   3. RÉCUPÉRATION PARAMÈTRE CLIENT DANS L’URL
---------------------------- */
-function getClientId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("client") || "unknown_client";
+// ---------------- RULES ----------------
+function activateRules() {
+    const form = document.getElementById("survey-form");
+    form.removeEventListener('change', form._changeHandler, true);
+
+    const handler = function(e) {
+        const el = e.target;
+        if (!el.classList || !el.classList.contains('choice')) return;
+
+        const cat = el.dataset.category;
+        const q = el.dataset.question;
+
+        if (!cat || !q) return;
+
+        if (el.value === "Autre") {
+            const otherField = document.getElementById(`other-${cat}-${q}`);
+            if (otherField) otherField.style.display = el.checked ? 'inline-block' : 'none';
+        }
+
+        const checked = Array.from(form.querySelectorAll(`.choice[data-category="${cat}"][data-question="${q}"]:checked`));
+        if (checked.length > 5) {
+            el.checked = false;
+            alert("Vous pouvez sélectionner au maximum 5 réponses pour cette question.");
+        }
+    };
+
+    form._changeHandler = handler;
+    form.addEventListener('change', handler, true);
 }
 
-/* --------------------------
-   4. SOUMISSION DU FORMULAIRE
---------------------------- */
-async function submitForm(event) {
-    event.preventDefault();
+// ---------------- SUBMIT ----------------
+async function submitForm() {
+    const status = document.getElementById("status");
+    status.innerText = "";
 
-    const clientId = getClientId();
-    const machineId = document.getElementById("machine-id").value.trim();
+    const form = document.getElementById("survey-form");
+    const dataToInsert = [];
 
-    if (!machineId) {
-        alert("Merci de renseigner l'identifiant de la machine.");
-        return;
-    }
-
-    const selects = document.querySelectorAll(".choice-select");
-    let rowsToInsert = [];
-
-    CONFIG.categories.forEach(cat => {
+    CLIENT_CONFIG.categories.forEach(cat => {
         cat.questions.forEach(question => {
-            const select = [...selects].find(s =>
-                s.dataset.category === cat.id &&
-                s.dataset.question === question.id
-            );
+            const qBlock = form.querySelector(`[data-category="${cat.id}"][data-question="${question.id}"]`);
+            const selected = Array.from(qBlock.querySelectorAll("input[type='checkbox']:checked"));
 
-            if (!select) return;
+            const choices = selected.map(s => s.value);
+            const otherValue = choices.includes("Autre") ? document.getElementById(`other-${cat.id}-${question.id}`).value : null;
 
-            rowsToInsert.push({
+            dataToInsert.push({
                 client_id: clientId,
                 machine_id: machineId,
                 category: cat.label,
                 question: question.label,
-
-                // jusqu'à 5 choix max (norme option A)
-                choice_1: select.value || null,
-                choice_2: null,
-                choice_3: null,
-                choice_4: null,
-                choice_5: null,
-
+                choices,
+                other: otherValue,
                 created_at: new Date().toISOString()
             });
         });
     });
 
-    // 🔥 Protection -> aucun champ rempli
-    const filled = rowsToInsert.some(r => r.choice_1 !== null);
-    if (!filled) {
-        alert("Merci de sélectionner au moins une réponse.");
-        return;
-    }
-
-    // 🔥 On ne garde que les réponses réellement choisies
-    rowsToInsert = rowsToInsert.filter(r => r.choice_1 !== null);
-
-    /* --------------------------
-       5. INSERTION DANS SUPABASE
-    --------------------------- */
-    const { error } = await supabaseClient
-        .from(CONFIG.dashboard.tableName)
-        .insert(rowsToInsert);
+    const { error } = await supabaseClient.from("survey_results").insert(dataToInsert);
 
     if (error) {
-        console.error("Supabase insert error :", error);
-        alert("Erreur lors de l’envoi. Vérifiez votre configuration.");
-        return;
+        status.innerText = "Erreur lors de l'enregistrement.";
+        console.error(error);
+    } else {
+        status.innerText = "Merci, vos réponses ont été enregistrées.";
+        document.getElementById("submit-btn").disabled = true;
     }
-
-    alert("Vos réponses ont été enregistrées avec succès !");
-    document.getElementById("survey-form").reset();
 }
 
-/* --------------------------
-   6. LANCEMENT
---------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-    loadConfig();
+// ---------------- INIT ----------------
+document.getElementById("submit-btn").addEventListener("click", submitForm);
+loadConfig();
 
-    const form = document.getElementById("survey-form");
-    form.addEventListener("submit", submitForm);
-});
 
 
