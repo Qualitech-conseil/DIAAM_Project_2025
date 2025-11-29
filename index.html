@@ -1,142 +1,222 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulaire Sondage</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sondage Machine</title>
 
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-    <div id="app">
-        <img id="client-logo" src="" alt="Logo"
-             style="max-width:150px; display:block; margin:0 auto 20px;" />
 
-        <h1 id="form-title">Chargement...</h1>
+<div id="app">
+    <h1 id="title">Chargement...</h1>
 
-        <form id="survey-form"></form>
+    <form id="survey-form"></form>
 
-        <button id="submit-btn" style="display:none; margin-top:20px;">Envoyer</button>
+    <button id="submit-btn" style="display:none; margin-top:20px;">Envoyer</button>
+    <p id="status"></p>
+</div>
 
-        <p id="status"></p>
-    </div>
+<script>
 
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const clientId = params.get("client");
-        const machineId = params.get("machine");
+/******************************************************
+ *  PARAMS URL
+ ******************************************************/
+const urlParams = new URLSearchParams(window.location.search);
+const clientId = urlParams.get("client");
+const machineId = urlParams.get("machine");
 
-        const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-        const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+if (!clientId || !machineId) {
+    document.getElementById("app").innerHTML =
+        "<p>⚠️ Paramètres manquants. Exemple : ?client=client_1&machine=machine_1_1</p>";
+}
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-        let CONFIG = null;
+/******************************************************
+ * CHARGEMENT CONFIG.GLOBAL.JSON
+ ******************************************************/
+let APP_CONFIG = null;
 
-        async function loadConfig() {
-            const response = await fetch(`clients/${clientId}/config.json`);
-            CONFIG = await response.json();
+async function loadConfig() {
+    const res = await fetch("config.json");
+    APP_CONFIG = await res.json();
 
-            document.getElementById("client-logo").src = CONFIG.logo;
-            document.getElementById("form-title").innerText = CONFIG.title;
+    document.getElementById("title").innerText =
+        "Sondage – " + clientId + " / " + machineId;
 
-            buildForm(CONFIG.categories);
-            document.getElementById("submit-btn").style.display = "block";
-        }
+    buildForm(APP_CONFIG.categories);
+    document.getElementById("submit-btn").style.display = "block";
+}
 
-        function buildForm(categories) {
-            const form = document.getElementById("survey-form");
-            form.innerHTML = "";
+/******************************************************
+ * CONSTRUCTION DU FORMULAIRE
+ ******************************************************/
+function buildForm(categories) {
+    const form = document.getElementById("survey-form");
+    form.innerHTML = "";
 
-            categories.forEach(cat => {
-                const block = document.createElement("div");
-                block.className = "category";
-                block.dataset.category = cat.id;
+    categories.forEach(cat => {
 
-                const title = document.createElement("h3");
-                title.innerText = cat.question;
-                block.appendChild(title);
+        // catégorie contenant plusieurs questions
+        const catBlock = document.createElement("div");
+        catBlock.className = "category-block";
 
-                cat.options.forEach(opt => {
-                    const div = document.createElement("div");
-                    div.innerHTML = `
-                        <label>
-                            <input type="checkbox" name="${cat.id}" value="${opt}"> ${opt}
-                        </label>`;
-                    block.appendChild(div);
-                });
+        const catTitle = document.createElement("h2");
+        catTitle.innerText = cat.label;
+        catBlock.appendChild(catTitle);
 
-                const other = document.createElement("div");
-                other.innerHTML = `
-                    <label>
-                        <input type="checkbox" name="${cat.id}" value="Autre"> Autre
-                    </label>
-                    <input type="text" id="other-${cat.id}" style="display:none" placeholder="Précisez">
+        // chaque question dans la catégorie
+        cat.questions.forEach(question => {
+            
+            const qBlock = document.createElement("div");
+            qBlock.className = "question-block";
+            qBlock.dataset.category = cat.id;
+            qBlock.dataset.question = question.id;
+
+            const qLabel = document.createElement("h3");
+            qLabel.innerText = question.label;
+            qBlock.appendChild(qLabel);
+
+            // choix
+            question.choices.forEach(choice => {
+                const line = document.createElement("label");
+                line.innerHTML = `
+                    <input type="checkbox"
+                        class="choice"
+                        data-category="${cat.id}"
+                        data-question="${question.id}"
+                        value="${choice}">
+                    ${choice}
                 `;
-                block.appendChild(other);
-
-                form.appendChild(block);
+                qBlock.appendChild(line);
             });
 
-            document.querySelectorAll("input[type='checkbox']").forEach(cb => {
-                cb.addEventListener("change", () => {
-                    if (cb.value === "Autre") {
-                        const input = document.getElementById(`other-${cb.name}`);
-                        input.style.display = cb.checked ? "inline-block" : "none";
-                    }
-                });
-            });
-        }
+            // AUTRE
+            const htmlAutre = document.createElement("div");
+            htmlAutre.innerHTML = `
+                <label>
+                    <input type="checkbox"
+                        class="choice"
+                        data-category="${cat.id}"
+                        data-question="${question.id}"
+                        value="Autre">
+                    Autre
+                </label>
+                <input type="text"
+                       id="other-${cat.id}-${question.id}"
+                       placeholder="Précisez"
+                       style="display:none; margin-left:10px;">
+            `;
+            qBlock.appendChild(htmlAutre);
 
-        async function submitForm() {
-            const status = document.getElementById("status");
-            status.innerText = "";
+            catBlock.appendChild(qBlock);
+        });
 
-            for (const cat of CONFIG.categories) {
-                const block = document.querySelector(`[data-category="${cat.id}"]`);
-                const selected = [...block.querySelectorAll("input[type=checkbox]:checked")].map(x => x.value);
+        form.appendChild(catBlock);
+    });
 
-                let otherValue = null;
-                if (selected.includes("Autre")) {
-                    otherValue = document.getElementById(`other-${cat.id}`).value;
-                }
+    activateRules();
+}
 
-                const finalChoices = selected.filter(x => x !== "Autre");
-                if (otherValue) finalChoices.push(otherValue);
+/******************************************************
+ * RÈGLES (max 5 choix + champ autre)
+ ******************************************************/
+function activateRules() {
+    document.querySelectorAll(".choice").forEach(cb => {
 
-                // Pad to 5 cols
-                const padded = [
-                    finalChoices[0] || null,
-                    finalChoices[1] || null,
-                    finalChoices[2] || null,
-                    finalChoices[3] || null,
-                    finalChoices[4] || null
-                ];
+        cb.addEventListener("change", () => {
 
-                await supabaseClient.from("survey_results").insert({
-                    client_id: clientId,
-                    machine_id: machineId,
-                    category: cat.id,
-                    question: cat.question,
-                    choice_1: padded[0],
-                    choice_2: padded[1],
-                    choice_3: padded[2],
-                    choice_4: padded[3],
-                    choice_5: padded[4],
-                    created_at: new Date().toISOString()
-                });
+            const cat = cb.dataset.category;
+            const q = cb.dataset.question;
+
+            // champ autre
+            if (cb.value === "Autre") {
+                document.getElementById(`other-${cat}-${q}`).style.display =
+                    cb.checked ? "inline-block" : "none";
             }
 
-            status.innerText = "Merci, vos réponses ont été enregistrées.";
-            document.getElementById("submit-btn").disabled = true;
-        }
+            // max 5
+            const group = document.querySelectorAll(
+                `.choice[data-category='${cat}'][data-question='${q}']:checked`
+            );
 
-        document.getElementById("submit-btn").addEventListener("click", submitForm);
-        loadConfig();
-    </script>
+            if (group.length > 5) {
+                cb.checked = false;
+                alert("Vous pouvez sélectionner au maximum 5 réponses.");
+            }
+        });
+    });
+}
+
+/******************************************************
+ * ENVOI SUPABASE EN COLONNES SEPAREES
+ ******************************************************/
+const supabaseClient = supabase.createClient(
+    "https://vawvmiosgslvykfqxffs.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8"
+);
+
+async function submitForm() {
+
+    const status = document.getElementById("status");
+    status.innerText = "";
+
+    const inserts = [];
+
+    APP_CONFIG.categories.forEach(cat => {
+        cat.questions.forEach(q => {
+
+            const selected = [
+                ...document.querySelectorAll(
+                    `.choice[data-category="${cat.id}"][data-question="${q.id}"]:checked`
+                )
+            ].map(i => i.value);
+
+            let otherValue = null;
+            if (selected.includes("Autre")) {
+                otherValue = document.getElementById(`other-${cat.id}-${q.id}`).value || null;
+            }
+
+            // remplir les colonnes choice_1..5
+            const result = {
+                client_id: clientId,
+                machine_id: machineId,
+                category: cat.label,
+                question: q.label,
+                choice_1: selected[0] || null,
+                choice_2: selected[1] || null,
+                choice_3: selected[2] || null,
+                choice_4: selected[3] || null,
+                choice_5: selected[4] || (otherValue ? "Autre: " + otherValue : null),
+                created_at: new Date().toISOString()
+            };
+
+            inserts.push(result);
+        });
+    });
+
+    const { error } = await supabaseClient.from("survey_results").insert(inserts);
+
+    if (error) {
+        status.innerText = "❌ Erreur lors de l'enregistrement.";
+        console.error(error);
+        return;
+    }
+
+    status.innerText = "✔️ Merci, vos réponses ont été enregistrées.";
+    document.getElementById("submit-btn").disabled = true;
+}
+
+document.getElementById("submit-btn").addEventListener("click", submitForm);
+
+loadConfig();
+
+</script>
 </body>
 </html>
+
 
 </body>
 </html>
