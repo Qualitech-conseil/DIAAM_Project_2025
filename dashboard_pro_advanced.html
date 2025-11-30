@@ -7,11 +7,11 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<!-- html2canvas for PDF export -->
+<!-- html2canvas -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<!-- jsPDF for PDF export -->
+<!-- jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<!-- SheetJS for XLSX export -->
+<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -144,6 +144,9 @@
     <footer class="small">DIAAM Analytics Pro — Advanced • Responsive & exports</footer>
   </div>
 
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/dist/umd/supabase.js"></script>
+  
 <!-- Main JS module -->
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
@@ -155,7 +158,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ★ BONNE LIGNE À UTILISER
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-
+    console.log("Supabase chargé :", supabase);
+  
     // ---------------- ELEMENTS FILTRES ----------------
     const clientSelect  = document.getElementById("clientFilter");
     const machineSelect = document.getElementById("machineFilter");
