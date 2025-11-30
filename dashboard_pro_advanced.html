@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DIAAM Analytics Pro — Advanced</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<!-- html2canvas for PDF export -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- jsPDF for PDF export -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- SheetJS for XLSX export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --muted:#94a3b8;
+    --accent:#06b6d4;
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:#e6eef8;background:linear-gradient(180deg,#071025 0%, #071a2a 80%);}
+  .wrap{max-width:1300px;margin:14px auto;padding:14px}
+  header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{margin:0;font-size:18px}
+  .topbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  select,input,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--card);color:#e6eef8}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .kpis{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .kpi{background:var(--glass);padding:12px;border-radius:10px;min-width:160px;box-shadow:0 6px 20px rgba(2,6,23,0.5)}
+  .layout{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:12px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  canvas{width:100% !important;height:auto !important}
+  .table-scroll{max-height:300px;overflow:auto;margin-top:8px}
+  table{width:100%;border-collapse:collapse;color:#cbd5e1}
+  th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px}
+  .controls {display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn {background:var(--accent);color:#042028;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .ghost {background:transparent;border:1px solid rgba(255,255,255,0.06)}
+  .small {font-size:13px;color:var(--muted)}
+  footer{margin-top:12px;color:var(--muted);font-size:13px}
+  @media(max-width:1000px){ .layout{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>DIAAM Analytics Pro — Advanced</h1>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <div id="userBadge" class="small">Visiteur</div>
+        <button id="btnTheme" class="ghost">Thème</button>
+        <button id="btnLogin" class="ghost">Login</button>
+      </div>
+    </header>
+
+    <div class="topbar">
+      <div class="filters">
+        <select id="clientFilter"><option value="">Tous clients</option></select>
+        <select id="machineFilter"><option value="">Toutes machines</option></select>
+        <select id="categoryFilter"><option value="">Toutes catégories</option></select>
+        <select id="questionFilter"><option value="">Toutes questions</option></select>
+        <input type="date" id="dateFrom"/>
+        <input type="date" id="dateTo"/>
+        <button id="applyFilters" class="btn">Appliquer</button>
+      </div>
+
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button id="btnRefresh" class="ghost">Rafraîchir</button>
+        <button id="exportCSV" class="ghost">Export CSV</button>
+        <button id="exportXLS" class="ghost">Export XLSX</button>
+        <button id="exportPDF" class="ghost">Export PDF</button>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis">
+      <div class="kpi"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
+      <div class="kpi"><div class="small">Clients</div><div id="kpClients" style="font-weight:700">0</div></div>
+      <div class="kpi"><div class="small">Machines</div><div id="kpMachines" style="font-weight:700">0</div></div>
+      <div class="kpi"><div class="small">Top produit</div><div id="kpTop" style="font-weight:700">—</div></div>
+    </div>
+
+    <div class="layout">
+      <main>
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top:0">Top produits (bar)</h3>
+            <canvas id="chartTopProducts" height="200"></canvas>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Répartition catégories (doughnut)</h3>
+            <canvas id="chartCategories" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Timeline — Réponses / jour</h3>
+          <canvas id="chartTimeline" height="120"></canvas>
+        </div>
+
+        <div class="grid2" style="margin-top:12px">
+          <div class="card">
+            <h3 style="margin-top:0">Top machines</h3>
+            <canvas id="chartMachines" height="200"></canvas>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Heat (machines x catégories)</h3>
+            <canvas id="chartHeat" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Répartition par question (sélection)</h3>
+          <canvas id="chartQuestion" height="160"></canvas>
+        </div>
+      </main>
+
+      <aside>
+        <div class="card">
+          <h3 style="margin-top:0">Table (extraits)</h3>
+          <div class="table-scroll">
+            <table id="tbl">
+              <thead><tr><th>Date</th><th>Client</th><th>Machine</th><th>Catégorie</th><th>Question</th><th>Choix</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Filtres rapides</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="last7" class="ghost">7j</button>
+            <button id="last30" class="ghost">30j</button>
+            <button id="thisMonth" class="ghost">Mois</button>
+            <button id="all" class="ghost">Tous</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="small">DIAAM Analytics Pro — Advanced • Responsive & exports</footer>
+  </div>
+
+<!-- Main JS module -->
+<script type="module">
+/* ================= CONFIG LOAD ================= */
+async function loadConfig() {
+  try {
+    const res = await fetch('client/client_1/config.json');
+    if (!res.ok) throw new Error('config.json non trouvé');
+    return await res.json();
+  } catch (e) {
+    console.error('Erreur config:', e);
+    alert('Impossible de charger config.json. Vérifiez le chemin.');
+    throw e;
+  }
+}
+
+/* =========== imports & supabase init =========== */
+/* Using ESM createClient from supabase-js (CDN esm) */
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const CONFIG = await loadConfig();
+const SUPABASE_URL = CONFIG.supabase.url;
+const SUPABASE_KEY = CONFIG.supabase.anonKey;
+
+/* use sb as client to avoid conflicts */
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* =========== DOM refs =========== */
+const clientFilter = document.getElementById('clientFilter');
+const machineFilter = document.getElementById('machineFilter');
+const categoryFilter = document.getElementById('categoryFilter');
+const questionFilter = document.getElementById('questionFilter');
+const dateFrom = document.getElementById('dateFrom');
+const dateTo = document.getElementById('dateTo');
+
+const kpTotal = document.getElementById('kpTotal');
+const kpClients = document.getElementById('kpClients');
+const kpMachines = document.getElementById('kpMachines');
+const kpTop = document.getElementById('kpTop');
+
+const tblBody = document.querySelector('#tbl tbody');
+
+const btnApply = document.getElementById('applyFilters');
+const btnRefresh = document.getElementById('btnRefresh');
+const btnExportCSV = document.getElementById('exportCSV');
+const btnExportXLS = document.getElementById('exportXLS');
+const btnExportPDF = document.getElementById('exportPDF');
+
+const btnLast7 = document.getElementById('last7');
+const btnLast30 = document.getElementById('last30');
+const btnThisMonth = document.getElementById('thisMonth');
+const btnAll = document.getElementById('all');
+
+const ctxTop = document.getElementById('chartTopProducts').getContext('2d');
+const ctxCat = document.getElementById('chartCategories').getContext('2d');
+const ctxTime = document.getElementById('chartTimeline').getContext('2d');
+const ctxMachines = document.getElementById('chartMachines').getContext('2d');
+const ctxHeat = document.getElementById('chartHeat').getContext('2d');
+const ctxQuestion = document.getElementById('chartQuestion').getContext('2d');
+
+/* =========== state =========== */
+let rows = [];
+let filtered = [];
+
+let charts = {
+  top: null, cat: null, time: null, machines: null, heat: null, question: null
+};
+
+/* =========== helpers =========== */
+const fmtDate = d => new Date(d).toLocaleString();
+const clone = v => JSON.parse(JSON.stringify(v));
+
+function aggregateChoices(rs){
+  const counts = {};
+  rs.forEach(r=>{
+    for(let i=1;i<=5;i++){
+      const v = r[`choice_${i}`];
+      if(v) counts[v] = (counts[v]||0) + 1;
+    }
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+}
+
+/* =========== data fetch =========== */
+async function fetchAll(){
+  document.getElementById('status').innerText = 'Chargement...';
+  const { data, error } = await sb
+    .from(CONFIG.dashboard.tableName)
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) { console.error(error); alert('Erreur lecture Supabase: '+error.message); document.getElementById('status').innerText=''; return; }
+  rows = data || [];
+  document.getElementById('status').innerText = '';
+  buildFilters();
+  applyFilters(); // initial render
+}
+
+/* =========== UI: filters population =========== */
+function buildFilters(){
+  const clients = Array.from(new Set(rows.map(r=>r.client_id).filter(Boolean))).sort();
+  const machines = Array.from(new Set(rows.map(r=>r.machine_id).filter(Boolean))).sort();
+  const cats = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
+  const questions = Array.from(new Set(rows.map(r=>r.question).filter(Boolean))).sort();
+
+  clientFilter.innerHTML = '<option value="">Tous clients</option>' + clients.map(c=>`<option value="${c}">${c}</option>`).join('');
+  machineFilter.innerHTML = '<option value="">Toutes machines</option>' + machines.map(m=>`<option value="${m}">${m}</option>`).join('');
+  categoryFilter.innerHTML = '<option value="">Toutes catégories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  questionFilter.innerHTML = '<option value="">Toutes questions</option>' + questions.map(q=>`<option value="${q}">${q}</option>`).join('');
+}
+
+/* =========== apply filters =========== */
+function applyFilters(){
+  filtered = rows.slice();
+
+  const c = clientFilter.value; if(c) filtered = filtered.filter(r=>r.client_id === c);
+  const m = machineFilter.value; if(m) filtered = filtered.filter(r=>r.machine_id === m);
+  const ct = categoryFilter.value; if(ct) filtered = filtered.filter(r=>r.category === ct);
+  const q = questionFilter.value; if(q) filtered = filtered.filter(r=>r.question === q);
+
+  if(dateFrom.value) filtered = filtered.filter(r=> new Date(r.created_at) >= new Date(dateFrom.value + 'T00:00:00'));
+  if(dateTo.value) filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value + 'T23:59:59'));
+
+  renderAll();
+}
+
+/* =========== renderers =========== */
+function renderKPIs(){
+  kpTotal.innerText = filtered.length;
+  kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size;
+  kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size;
+
+  const agg = aggregateChoices(filtered);
+  kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—';
+}
+
+function renderTable(limit = 200){
+  tblBody.innerHTML = '';
+  filtered.slice().reverse().slice(0, limit).forEach(r=>{
+    const tr = document.createElement('tr');
+    const choices = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
+    tr.innerHTML = `<td>${fmtDate(r.created_at)}</td><td>${r.client_id||''}</td><td>${r.machine_id||''}</td><td>${r.category||''}</td><td>${r.question||''}</td><td>${choices}</td>`;
+    tblBody.appendChild(tr);
+  });
+}
+
+function renderTopChart(){
+  const data = aggregateChoices(filtered).slice(0,20);
+  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
+  if (charts.top) charts.top.destroy();
+  charts.top = new Chart(ctxTop, { type:'bar', data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor:'#06b6d4' }] }, options:{responsive:true, plugins:{legend:{display:false}}} });
+}
+
+function renderCatChart(){
+  const counts = {};
+  filtered.forEach(r=> counts[r.category] = (counts[r.category]||0)+1 );
+  const labels = Object.keys(counts), data = Object.values(counts);
+  if (charts.cat) charts.cat.destroy();
+  charts.cat = new Chart(ctxCat, { type:'doughnut', data:{labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>`hsl(${i*50%360} 80% 60%)`) }] }, options:{responsive:true} });
+}
+
+function renderTimeline(){
+  const perDay = {};
+  filtered.forEach(r=>{
+    const d = new Date(r.created_at).toISOString().slice(0,10);
+    perDay[d] = (perDay[d]||0)+1;
+  });
+  const labels = Object.keys(perDay).sort();
+  const data = labels.map(l=>perDay[l]);
+  if (charts.time) charts.time.destroy();
+  charts.time = new Chart(ctxTime, { type:'line', data:{ labels, datasets:[{ label:'Réponses / jour', data, fill:true, backgroundColor:'rgba(6,182,212,0.12)', borderColor:'#06b6d4' }] }, options:{responsive:true} });
+}
+
+function renderMachines(){
+  const counts = {};
+  filtered.forEach(r=> counts[r.machine_id] = (counts[r.machine_id]||0)+1 );
+  const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
+  if (charts.machines) charts.machines.destroy();
+  charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor:'#7c3aed' }] }, options:{responsive:true, plugins:{legend:{display:false}}} });
+}
+
+function renderHeat(){
+  // categories x machines matrix -> stacked horizontal bars
+  const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
+  const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
+  const matrix = machines.map(m=>{
+    return cats.map(c=> filtered.filter(r=> r.machine_id===m && r.category===c).length );
+  });
+  const datasets = cats.map((cat,i)=>({ label:cat, data: matrix.map(row=>row[i]), stack:'s' }));
+  if (charts.heat) charts.heat.destroy();
+  charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels:machines, datasets }, options:{ indexAxis:'y', responsive:true, plugins:{legend:{position:'bottom'}} } });
+}
+
+function renderQuestionChart(){
+  // aggregate by question: top choice counts for all questions combined
+  const counts = {};
+  filtered.forEach(r=>{
+    const key = r.question || '—';
+    counts[key] = counts[key] || 0;
+    counts[key] += 1;
+  });
+  const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,12);
+  const data = labels.map(l=>counts[l]);
+  if (charts.question) charts.question.destroy();
+  charts.question = new Chart(ctxQuestion, { type:'polarArea', data:{ labels, datasets:[{ data, backgroundColor:labels.map((_,i)=>`hsl(${i*30%360} 80% 60%)`) }] }, options:{responsive:true} });
+}
+
+function renderAll(){
+  renderKPIs();
+  renderTopChart();
+  renderCatChart();
+  renderTimeline();
+  renderMachines();
+  renderHeat();
+  renderQuestionChart();
+  renderTable();
+}
+
+/* =========== exports =========== */
+function exportCSV(){
+  if (!filtered.length) return alert('Aucune donnée');
+  const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
+  const rowsCsv = filtered.map(r => header.map(h=> `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(',')].concat(rowsCsv).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function exportXLS(){
+  const wb = XLSX.utils.book_new();
+  const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
+  const data = [header].concat(filtered.map(r => header.map(h=> r[h] || '')));
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, 'Export');
+  XLSX.writeFile(wb, 'export.xlsx');
+}
+
+async function exportPDF(){
+  // render the charts area as image and put into PDF
+  const area = document.querySelector('.layout');
+  const canvas = await html2canvas(area, { scale: 1.5, backgroundColor: null });
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  // keep aspect ratio
+  const imgW = pageW - 40;
+  const imgH = (canvas.height * imgW) / canvas.width;
+  doc.addImage(imgData, 'PNG', 20, 20, imgW, imgH);
+  doc.save('dashboard.pdf');
+}
+
+/* =========== events binding =========== */
+btnApply.addEventListener('click', applyFilters);
+btnRefresh.addEventListener('click', fetchAll);
+btnExportCSV.addEventListener('click', exportCSV);
+btnExportXLS.addEventListener('click', exportXLS);
+btnExportPDF.addEventListener('click', exportPDF);
+
+btnLast7.addEventListener('click', ()=>{
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-7);
+  dateFrom.value = from.toISOString().slice(0,10); dateTo.value = to.toISOString().slice(0,10); applyFilters();
+});
+btnLast30.addEventListener('click', ()=>{
+  const to = new Date(); const from = new Date(); from.setDate(to.getDate()-30);
+  dateFrom.value = from.toISOString().slice(0,10); dateTo.value = to.toISOString().slice(0,10); applyFilters();
+});
+btnThisMonth.addEventListener('click', ()=>{
+  const now = new Date();
+  dateFrom.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+  dateTo.value = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
+  applyFilters();
+});
+btnAll.addEventListener('click', ()=>{
+  dateFrom.value = ''; dateTo.value = ''; clientFilter.value=''; machineFilter.value=''; categoryFilter.value=''; questionFilter.value=''; applyFilters();
+});
+
+/* =========== theme toggle & login stub =========== */
+document.getElementById('btnTheme').addEventListener('click', ()=>{
+  // simple toggle CSS variables
+  const root = document.documentElement;
+  if (root.style.getPropertyValue('--bg') === '#ffffff' || !root.style.getPropertyValue('--bg')) {
+    // switch to light
+    root.style.setProperty('--bg','#ffffff');
+    root.style.setProperty('--card','#ffffff');
+    root.style.setProperty('--muted','#4b5563');
+    root.style.setProperty('--accent','#2563eb');
+    document.body.style.background = '#f8fafc';
+  } else {
+    // dark
+    root.style.setProperty('--bg','#0f1724');
+    root.style.setProperty('--card','#0b1220');
+    root.style.setProperty('--muted','#94a3b8');
+    root.style.setProperty('--accent','#06b6d4');
+    document.body.style.background = 'linear-gradient(180deg,#071025 0%, #071a2a 80%)';
+  }
+});
+
+document.getElementById('btnLogin').addEventListener('click', async ()=>{
+  const email = prompt('Email admin:'); if(!email) return;
+  const pass = prompt('Mot de passe:'); if(!pass) return;
+  // try sign-in (optional): requires user created in Supabase
+  try {
+    const res = await sb.auth.signInWithPassword({ email, password: pass });
+    if (res.error) { alert('Erreur login: '+res.error.message); return; }
+    document.getElementById('userBadge').innerText = email;
+    alert('Connecté');
+  } catch(e){
+    console.error(e); alert('Erreur auth: check console');
+  }
+});
+
+/* =========== init =========== */
+await fetchAll();
+
+</script>
+</body>
+</html>
