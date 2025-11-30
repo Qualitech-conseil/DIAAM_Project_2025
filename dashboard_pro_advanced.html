@@ -146,6 +146,7 @@
 
 <!-- Main JS module -->
 <script type="module">
+  document.addEventListener("DOMContentLoaded", () => {
 /* ================= CONFIG LOAD ================= */
 async function loadConfig() {
   try {
@@ -462,7 +463,7 @@ document.getElementById('btnLogin').addEventListener('click', async ()=>{
    document.addEventListener("DOMContentLoaded", () => {
     fetchAll();
 });
-
+}); // fin DOMContentLoaded
 </script>
 </body>
 </html>
