@@ -151,22 +151,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ---------------- SUPABASE ----------------
     const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
     const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ★ BONNE LIGNE À UTILISER
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
 
     // ---------------- ELEMENTS FILTRES ----------------
-    const clientSelect = document.getElementById("filter-client");
-    const machineSelect = document.getElementById("filter-machine");
-    const dateStart = document.getElementById("filter-start");
-    const dateEnd = document.getElementById("filter-end");
-    const applyBtn = document.getElementById("apply-filters");
+    const clientSelect  = document.getElementById("clientFilter");
+    const machineSelect = document.getElementById("machineFilter");
+    const categorySelect = document.getElementById("categoryFilter");
+    const questionSelect = document.getElementById("questionFilter");
+    const dateStart     = document.getElementById("dateFrom");
+    const dateEnd       = document.getElementById("dateTo");
+    const applyBtn      = document.getElementById("applyFilters");
 
-    if (!clientSelect || !machineSelect) {
-        console.error("Les champs filtres ne sont pas trouvés.");
+    // Vérification de sécurité
+    if (!clientSelect || !machineSelect || !applyBtn) {
+        console.error("Certains éléments du DOM n'ont pas été trouvés.");
         return;
     }
 
+
     // ---------------- LOAD INITIAL DATA ----------------
     async function fetchAll() {
+
         let query = supabase.from("survey_results").select("*");
 
         if (clientSelect.value)
@@ -174,6 +182,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (machineSelect.value)
             query = query.eq("machine_id", machineSelect.value);
+
+        if (categorySelect.value)
+            query = query.eq("category", categorySelect.value);
+
+        if (questionSelect.value)
+            query = query.eq("question", questionSelect.value);
 
         if (dateStart.value)
             query = query.gte("created_at", dateStart.value);
@@ -191,11 +205,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderDashboard(data);
     }
 
+
     // ---------------- RENDER ----------------
     function renderDashboard(data) {
         console.log("Données filtrées :", data);
-        // Graphiques, stats, etc...
+        // Tu ajouteras les graphes ici
     }
+
 
     // ---------------- ACTION FILTRES ----------------
     applyBtn.addEventListener("click", fetchAll);
@@ -204,6 +220,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     fetchAll();
 });
 </script>
+
 
 </body>
 </html>
