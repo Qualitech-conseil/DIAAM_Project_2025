@@ -48,7 +48,7 @@
       "questions": [
         {
           "id": "q5",
-          "label": "Quelle produit Salée aimeriez-vous en plus ?",
+          "label": "Quel produit Salée aimeriez-vous en plus ?",
           "choices": ["cacahuéte", "Gateaux apéro", "Produit1", "Produit2"]
         }
       ]
