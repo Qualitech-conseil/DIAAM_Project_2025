@@ -1,385 +1,303 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>DIAAM Analytics Pro — Advanced</title>
+<meta charset="UTF-8">
+<title>Dashboard DIAAM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- STYLES -->
 <style>
-  :root{--bg:#f4f7fb;--card:#fff;--accent:#0ea5e9}
-  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0}
-  .wrap{max-width:1360px;margin:18px auto;padding:18px}
-  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  h1{margin:0}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-  select,input,button{padding:8px;border-radius:8px;border:1px solid #e6eef8;background:white}
-  .kpis{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
-  .kpi{background:var(--card);padding:12px;border-radius:8px;min-width:180px;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
-  .layout{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px}
-  .big-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .card{background:var(--card);padding:12px;border-radius:10px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:6px;border-bottom:1px solid #eef2f7;font-size:12.5px}
-  .small{font-size:12px;color:#555}
-  @media(max-width:1000px){.layout{grid-template-columns:1fr}}
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background: #0a74da;
+        color: white;
+        padding: 15px 20px;
+        font-size: 22px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* FILTRES */
+    #filters {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    select, input {
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        width: 100%;
+        border: 1px solid #ccc;
+    }
+
+    #applyFilters {
+        background: #0a74da;
+        padding: 12px;
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    /* GRAPHIQUES */
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* STATISTIQUES */
+    .stats-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .stat-box {
+        background: #fff;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+    }
 </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <h1>DIAAM Analytics Pro</h1>
-      <div style="margin-left:auto" id="status"></div>
-    </header>
+<header>DIAAM — Dashboard Analytique</header>
 
-    <div class="controls">
-      <select id="clientFilter"><option value="">Tous clients</option></select>
-      <select id="machineFilter"><option value="">Toutes machines</option></select>
-      <select id="categoryFilter"><option value="">Toutes catégories</option></select>
-      <select id="questionFilter"><option value="">Toutes questions</option></select>
-      <input type="date" id="dateFrom"/>
-      <input type="date" id="dateTo"/>
-      <button id="apply">Appliquer</button>
-      <button id="exportCsv">Export CSV</button>
+<div class="container">
+
+    <!-- 🔵 FILTRES -->
+    <div class="card">
+        <h3>Filtres</h3>
+
+        <div id="filters">
+            <select id="clientFilter">
+                <option value="">Tous les clients</option>
+            </select>
+
+            <select id="machineFilter">
+                <option value="">Toutes les machines</option>
+            </select>
+
+            <input type="date" id="dateStart">
+            <input type="date" id="dateEnd">
+
+            <div id="applyFilters">Appliquer</div>
+        </div>
     </div>
 
-    <div class="kpis">
-      <div class="kpi"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
-      <div class="kpi"><div class="small">Réponses uniques (clients)</div><div id="kpClients" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Machines actives</div><div id="kpMachines" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Taux "Autre"</div><div id="kpOther" style="font-weight:700">0%</div></div>
+    <!-- 🔵 STATISTIQUES -->
+    <div class="card">
+        <h3>Statistiques Globales</h3>
+
+        <div class="stats-grid">
+            <div class="stat-box" id="statTotal"></div>
+            <div class="stat-box" id="statUnique"></div>
+            <div class="stat-box" id="statCategories"></div>
+        </div>
     </div>
 
-    <div class="layout">
-      <main>
-        <div class="big-grid">
-          <div class="card"><h3>Top produits (bar)</h3><canvas id="topProducts"></canvas></div>
-          <div class="card"><h3>Répartition catégories</h3><canvas id="catPie"></canvas></div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3>Timeline — réponses / jour</h3>
-          <canvas id="timeline"></canvas>
-        </div>
-
-        <div class="big-grid" style="margin-top:12px">
-          <div class="card"><h3>Top Machines (bar)</h3><canvas id="machinesBar"></canvas></div>
-          <div class="card"><h3>Heat (machine x category)</h3><canvas id="heat"></canvas></div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <h3>Table détaillée</h3>
-          <div style="max-height:320px;overflow:auto">
-            <table id="tableDetailed"><thead><tr><th>Date</th><th>Client</th><th>Machine</th><th>Catégorie</th><th>Question</th><th>Choix</th></tr></thead><tbody></tbody></table>
-          </div>
-        </div>
-      </main>
-
-      <aside>
-        <div class="card"><h3>Filtres rapides</h3>
-          <button id="last7">7j</button><button id="last30">30j</button><button id="thisMonth">Mois</button>
-        </div>
-
-        <div class="card" style="margin-top:12px"><h3>Top par catégorie</h3><div id="topByCat"></div></div>
-
-        <div class="card" style="margin-top:12px"><h3>Export / Actions</h3>
-          <button id="btnExportPNG">Export PNG (charts)</button>
-        </div>
-      </aside>
+    <!-- 🔵 GRAPHIQUES -->
+    <div class="card">
+        <h3>Répartition par catégories</h3>
+        <canvas id="chartCategories"></canvas>
     </div>
 
-  </div>
+    <div class="card">
+        <h3>Produits les plus choisis</h3>
+        <canvas id="chartProduits"></canvas>
+    </div>
 
-<script>
-/* =========== CONFIG =========== */
-const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+</div>
 
-/* FIX: utiliser window.supabase et un nom différent */
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+<!-- 🔵 SUPABASE -->
+<script type="module">
 
-/* ============================== */
+    // Import obligatoire
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-let rows = [], filtered = [];
+    // 🔵 Chargement config.json
+    let CONFIG = null;
 
-const clientFilter = document.getElementById('clientFilter');
-const machineFilter = document.getElementById('machineFilter');
-const categoryFilter = document.getElementById('categoryFilter');
-const questionFilter = document.getElementById('questionFilter');
-const dateFrom = document.getElementById('dateFrom');
-const dateTo   = document.getElementById('dateTo');
-
-const topProductsCtx = document.getElementById('topProducts').getContext('2d');
-const catPieCtx      = document.getElementById('catPie').getContext('2d');
-const timelineCtx    = document.getElementById('timeline').getContext('2d');
-const machinesBarCtx = document.getElementById('machinesBar').getContext('2d');
-const heatCtx        = document.getElementById('heat').getContext('2d');
-
-let chartTop, chartCat, chartTime, chartMachines, chartHeat;
-
-async function loadAll(){
-  document.getElementById('status').innerText = 'Chargement...';
-
-  const { data, error } = await sb.from('survey_results').select('*').order('created_at',{ascending:true});
-
-  if(error){ console.error(error); alert('Erreur chargement'); return; }
-
-  rows = data || [];
-  populateFilters();
-  apply();
-  document.getElementById('status').innerText = '';
-}
-
-function populateFilters(){
-  const clients = Array.from(new Set(rows.map(r=>r.client_id).filter(Boolean))).sort();
-  clientFilter.innerHTML = '<option value="">Tous clients</option>'+clients.map(c=>`<option value="${c}">${c}</option>`).join('');
-
-  const machines = Array.from(new Set(rows.map(r=>r.machine_id).filter(Boolean))).sort();
-  machineFilter.innerHTML = '<option value="">Toutes machines</option>'+machines.map(m=>`<option value="${m}">${m}</option>`).join('');
-
-  const cats = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
-  categoryFilter.innerHTML = '<option value="">Toutes catégories</option>'+cats.map(c=>`<option>${c}</option>`).join('');
-
-  const questions = Array.from(new Set(rows.map(r=>r.question).filter(Boolean))).sort();
-  questionFilter.innerHTML = '<option value="">Toutes questions</option>'+questions.map(q=>`<option>${q}</option>`).join('');
-}
-
-function applyFilters(){
-  filtered = rows.slice();
-  const c = clientFilter.value; if(c) filtered = filtered.filter(r=>r.client_id===c);
-  const m = machineFilter.value; if(m) filtered = filtered.filter(r=>r.machine_id===m);
-  const cat = categoryFilter.value; if(cat) filtered = filtered.filter(r=>r.category===cat);
-  const q = questionFilter.value; if(q) filtered = filtered.filter(r=>r.question===q);
-
-  if(dateFrom.value) filtered = filtered.filter(r=> new Date(r.created_at) >= new Date(dateFrom.value+'T00:00:00'));
-  if(dateTo.value)   filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value+'T23:59:59'));
-
-  renderAll();
-}
-
-function renderAll(){
-  renderKPIs();
-  renderTopProducts();
-  renderCatPie();
-  renderTimeline();
-  renderMachines();
-  renderHeat();
-  renderTable();
-  renderTopByCategory();
-}
-
-function renderKPIs(){
-  document.getElementById('kpTotal').innerText = filtered.length;
-  document.getElementById('kpClients').innerText = new Set(filtered.map(r=>r.client_id)).size;
-  document.getElementById('kpMachines').innerText = new Set(filtered.map(r=>r.machine_id)).size;
-
-  const totalChoices = filtered.reduce((t,r)=> {
-    for(let i=1;i<=5;i++) if(r[`choice_${i}`]) t++;
-    return t;
-  },0);
-
-  const otherCount = filtered.reduce((t,r)=> {
-    for(let i=1;i<=5;i++) if((r[`choice_${i}`]||'').toLowerCase().startsWith('autre')) t++;
-    return t;
-  },0);
-
-  const pct = totalChoices? Math.round(otherCount/totalChoices*100):0;
-  document.getElementById('kpOther').innerText = pct + '%';
-}
-
-function aggregateChoices(rs){
-  const counts = {};
-  rs.forEach(r=>{
-    for(let i=1;i<=5;i++){
-      const v = r[`choice_${i}`];
-      if(v){ counts[v] = (counts[v]||0)+1; }
+    async function loadConfig() {
+        try {
+            const res = await fetch("config.json");
+            CONFIG = await res.json();
+        } catch (err) {
+            console.error("Erreur config.json :", err);
+        }
     }
-  });
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-}
 
-function renderTopProducts(){
-  const data = aggregateChoices(filtered).slice(0,12);
-  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
+    // Charge config AVANT Supabase
+    await loadConfig();
 
-  if(chartTop) chartTop.destroy();
+    const supabase = createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
 
-  chartTop = new Chart(topProductsCtx, {
-    type:'bar',
-    data:{labels,datasets:[{label:'Sélections',data:vals}]},
-    options:{responsive:true}
-  });
-}
+    // -------------------------------------------------------------------
+    // 🔵 Récupération des données depuis Supabase
+    // -------------------------------------------------------------------
 
-function renderCatPie(){
-  const counts = {};
-  filtered.forEach(r=>{ counts[r.category]=(counts[r.category]||0)+1; });
+    async function loadData(filters = {}) {
 
-  const labels = Object.keys(counts), data = Object.values(counts);
+        let query = supabase
+            .from(CONFIG.dashboard.tableName)
+            .select("*");
 
-  if(chartCat) chartCat.destroy();
+        if (filters.clientId) query.eq("client_id", filters.clientId);
+        if (filters.machineId) query.eq("machine_id", filters.machineId);
+        if (filters.dateStart) query.gte("created_at", filters.dateStart);
+        if (filters.dateEnd) query.lte("created_at", filters.dateEnd + " 23:59:59");
 
-  chartCat = new Chart(catPieCtx, {
-    type:'doughnut',
-    data:{labels,datasets:[{data}]},
-    options:{responsive:true}
-  });
-}
+        const { data, error } = await query;
 
-function renderTimeline(){
-  const perDay = {};
-  filtered.forEach(r=>{
-    const d = new Date(r.created_at).toISOString().slice(0,10);
-    perDay[d] = (perDay[d]||0)+1;
-  });
-
-  const labels = Object.keys(perDay).sort();
-  const data = labels.map(l=>perDay[l]);
-
-  if(chartTime) chartTime.destroy();
-
-  chartTime = new Chart(timelineCtx, {
-    type:'line',
-    data:{labels,datasets:[{label:'Réponses',data}]},
-    options:{responsive:true}
-  });
-}
-
-function renderMachines(){
-  const counts = {};
-  filtered.forEach(r=>{ counts[r.machine_id] = (counts[r.machine_id]||0)+1; });
-
-  const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
-
-  if(chartMachines) chartMachines.destroy();
-
-  chartMachines = new Chart(machinesBarCtx, {
-    type:'bar',
-    data:{labels,datasets:[{data:vals}]},
-    options:{responsive:true}
-  });
-}
-
-function renderHeat(){
-  const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
-  const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
-
-  const matrix = machines.map(m=>{
-    const row = cats.map(c=> filtered.filter(r=>r.machine_id===m && r.category===c).length );
-    return { machine:m, row };
-  });
-
-  const datasets = cats.map((cat,i)=>({
-    label:cat,
-    data: matrix.map(m=>m.row[i]),
-    stack:'s'
-  }));
-
-  if(chartHeat) chartHeat.destroy();
-
-  chartHeat = new Chart(heatCtx, {
-    type:'bar',
-    data:{labels:machines, datasets},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{position:'bottom'}}}
-  });
-}
-
-function renderTable(){
-  const tbody = document.querySelector('#tableDetailed tbody');
-  tbody.innerHTML='';
-
-  filtered.slice().reverse().forEach(r=>{
-    const tr = document.createElement('tr');
-    const choice = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
-
-    tr.innerHTML = `
-      <td>${new Date(r.created_at).toLocaleString()}</td>
-      <td>${r.client_id||''}</td>
-      <td>${r.machine_id||''}</td>
-      <td>${r.category||''}</td>
-      <td>${r.question||''}</td>
-      <td>${choice}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderTopByCategory(){
-  const byCat = {};
-
-  filtered.forEach(r=>{
-    byCat[r.category] = byCat[r.category]||{};
-    for(let i=1;i<=5;i++){
-      const v = r[`choice_${i}`]; if(!v) continue;
-      byCat[r.category][v] = (byCat[r.category][v]||0)+1;
+        if (error) {
+            console.error("Erreur chargement data :", error);
+            return [];
+        }
+        return data;
     }
-  });
 
-  const div = document.getElementById('topByCat');
-  div.innerHTML='';
+    // -------------------------------------------------------------------
+    // 🔵 Affichage des statistiques
+    // -------------------------------------------------------------------
 
-  Object.keys(byCat).forEach(cat=>{
-    const arr = Object.entries(byCat[cat]).sort((a,b)=>b[1]-a[1]).slice(0,3);
-    const el = document.createElement('div');
+    function updateStats(data) {
+        document.getElementById("statTotal").textContent =
+            "Total réponses : " + data.length;
 
-    el.innerHTML = `<strong>${cat}</strong><div>${arr.map(a=>`${a[0]} (${a[1]})`).join(' • ')}</div>`;
-    div.appendChild(el);
-  });
-}
+        const uniqueQuestions = new Set(data.map(d => d.question));
+        document.getElementById("statUnique").textContent =
+            "Questions uniques : " + uniqueQuestions.size;
 
-// events
-document.getElementById('apply').addEventListener('click', applyFilters);
+        const uniqueCategories = new Set(data.map(d => d.category));
+        document.getElementById("statCategories").textContent =
+            "Catégories : " + uniqueCategories.size;
+    }
 
-document.getElementById('exportCsv').addEventListener('click',()=>{
-  const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
-  const rowsData = filtered;
+    // -------------------------------------------------------------------
+    // 🔵 Graphique Catégories (camembert)
+    // -------------------------------------------------------------------
 
-  const csv = [header.join(',')].concat(
-    rowsData.map(r=>header.map(h=>`"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','))
-  ).join('\n');
+    let chartCategories = null;
 
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='export.csv';
-  a.click();
-});
+    function drawChartCategories(data) {
+        const ctx = document.getElementById("chartCategories");
 
-// quick filters
-document.getElementById('last7').addEventListener('click',()=>{
-  const to=new Date();
-  const from=new Date();
-  from.setDate(to.getDate()-7);
-  dateFrom.value=from.toISOString().slice(0,10);
-  dateTo.value=to.toISOString().slice(0,10);
-  applyFilters();
-});
+        const counts = {};
+        data.forEach(d => {
+            counts[d.category] = (counts[d.category] || 0) + 1;
+        });
 
-document.getElementById('last30').addEventListener('click',()=>{
-  const to=new Date();
-  const from=new Date();
-  from.setDate(to.getDate()-30);
-  dateFrom.value=from.toISOString().slice(0,10);
-  dateTo.value=to.toISOString().slice(0,10);
-  applyFilters();
-});
+        if (chartCategories) chartCategories.destroy();
 
-document.getElementById('thisMonth').addEventListener('click',()=>{
-  const now=new Date();
-  dateFrom.value = new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
-  dateTo.value   = new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().slice(0,10);
-  applyFilters();
-});
+        chartCategories = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts)
+                }]
+            }
+        });
+    }
 
-loadAll();
+    // -------------------------------------------------------------------
+    // 🔵 Graphique Produits / Choix
+    // -------------------------------------------------------------------
+
+    let chartProduits = null;
+
+    function drawChartProduits(data) {
+        const ctx = document.getElementById("chartProduits");
+
+        const counts = {};
+
+        data.forEach(d => {
+            const choices = [d.choice_1, d.choice_2, d.choice_3, d.choice_4, d.choice_5];
+            choices.forEach(c => {
+                if (c) counts[c] = (counts[c] || 0) + 1;
+            });
+        });
+
+        if (chartProduits) chartProduits.destroy();
+
+        chartProduits = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------
+    // 🔵 Application des filtres
+    // -------------------------------------------------------------------
+
+    document.getElementById("applyFilters").onclick = async () => {
+
+        const filters = {
+            clientId: document.getElementById("clientFilter").value,
+            machineId: document.getElementById("machineFilter").value,
+            dateStart: document.getElementById("dateStart").value,
+            dateEnd: document.getElementById("dateEnd").value
+        };
+
+        const data = await loadData(filters);
+
+        updateStats(data);
+        drawChartCategories(data);
+        drawChartProduits(data);
+    };
+
+    // -------------------------------------------------------------------
+    // 🔵 Initialisation au chargement
+    // -------------------------------------------------------------------
+
+    (async () => {
+        const data = await loadData();
+
+        updateStats(data);
+        drawChartCategories(data);
+        drawChartProduits(data);
+    })();
+
 </script>
 
 </body>
 </html>
 
-</script>
-</body>
-</html>
