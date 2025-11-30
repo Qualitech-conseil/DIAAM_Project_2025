@@ -138,7 +138,7 @@ function populateFilters(){
   questionFilter.innerHTML = '<option value="">Toutes questions</option>'+questions.map(q=>`<option>${q}</option>`).join('');
 }
 
-function apply(){
+function applyFilters(){
   filtered = rows.slice();
   const c = clientFilter.value; if(c) filtered = filtered.filter(r=>r.client_id===c);
   const m = machineFilter.value; if(m) filtered = filtered.filter(r=>r.machine_id===m);
@@ -147,6 +147,8 @@ function apply(){
   if(dateFrom.value) filtered = filtered.filter(r=> new Date(r.created_at) >= new Date(dateFrom.value+'T00:00:00'));
   if(dateTo.value) filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value+'T23:59:59'));
   renderAll();
+
+
 }
 
 function renderAll(){
@@ -268,7 +270,7 @@ function renderTopByCategory(){
 }
 
 // exports
-document.getElementById('apply').addEventListener('click',apply);
+document.getElementById('apply').addEventListener('click', applyFilters);
 document.getElementById('exportCsv').addEventListener('click',()=>{
   const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
   const rowsData = filtered;
@@ -277,9 +279,9 @@ document.getElementById('exportCsv').addEventListener('click',()=>{
 });
 
 // quick filters
-document.getElementById('last7').addEventListener('click',()=>{ const to=new Date(); const from=new Date(); from.setDate(to.getDate()-7); dateFrom.value=from.toISOString().slice(0,10); dateTo.value=to.toISOString().slice(0,10); apply(); });
-document.getElementById('last30').addEventListener('click',()=>{ const to=new Date(); const from=new Date(); from.setDate(to.getDate()-30); dateFrom.value=from.toISOString().slice(0,10); dateTo.value=to.toISOString().slice(0,10); apply(); });
-document.getElementById('thisMonth').addEventListener('click',()=>{ const now=new Date(); dateFrom.value = new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10); dateTo.value = new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().slice(0,10); apply(); });
+document.getElementById('last7').addEventListener('click',()=>{ const to=new Date(); const from=new Date(); from.setDate(to.getDate()-7); dateFrom.value=from.toISOString().slice(0,10); dateTo.value=to.toISOString().slice(0,10); applyFilters(); });
+document.getElementById('last30').addEventListener('click',()=>{ const to=new Date(); const from=new Date(); from.setDate(to.getDate()-30); dateFrom.value=from.toISOString().slice(0,10); dateTo.value=to.toISOString().slice(0,10); applyFilters(); });
+document.getElementById('thisMonth').addEventListener('click',()=>{ const now=new Date(); dateFrom.value = new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10); dateTo.value = new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().slice(0,10); applyFilters(); });
 
 loadAll();
 </script>
