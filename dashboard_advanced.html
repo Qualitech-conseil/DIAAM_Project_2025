@@ -8,24 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
-<style>
-  :root{--bg:#f4f7fb;--card:#fff;--accent:#0ea5e9}
-  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0}
-  .wrap{max-width:1360px;margin:18px auto;padding:18px}
-  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  h1{margin:0}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-  select,input,button{padding:8px;border-radius:8px;border:1px solid #e6eef8;background:white}
-  .kpis{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
-  .kpi{background:var(--card);padding:12px;border-radius:8px;min-width:180px;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
-  .layout{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px}
-  .big-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .card{background:var(--card);padding:12px;border-radius:10px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:6px;border-bottom:1px solid #eef2f7;font-size:12.5px}
-  .small{font-size:12px;color:#555}
-  @media(max-width:1000px){.layout{grid-template-columns:1fr}}
-</style>
+<style> :root{--bg:#f4f7fb;--card:#fff;--accent:#0ea5e9} body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0} .wrap{max-width:1360px;margin:18px auto;padding:18px} header{display:flex;align-items:center;gap:12px;flex-wrap:wrap} h1{margin:0;font-size:24px} .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px} select,input,button{padding:8px 10px;border-radius:8px;border:1px solid #e6eef8;background:white;font-size:14px} button{cursor:pointer} .kpis{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap} .kpi{background:var(--card);padding:12px;border-radius:8px;min-width:180px;box-shadow:0 6px 18px rgba(2,6,23,0.04)} .layout{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px} .big-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px} .card{background:var(--card);padding:12px;border-radius:10px} table{width:100%;border-collapse:collapse} th,td{padding:6px;border-bottom:1px solid #eef2f7;font-size:12.5px} .small{font-size:12px;color:#555} /* Tablet */ @media(max-width:1000px){ .layout{grid-template-columns:1fr} } /* Mobile */ @media(max-width:600px){ body{background:#ffffff} .wrap{margin:0;padding:10px} header{ flex-direction:column; align-items:flex-start; gap:6px; } h1{ font-size:20px; } #status{ font-size:12px; margin-left:0 !important; } /* Filtres en colonne */ .controls{ flex-direction:column; align-items:stretch; gap:8px; } .controls select, .controls input, .controls button{ width:100%; box-sizing:border-box; } /* KPI en 2 colonnes ou 1 si très petit */ .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; } .kpi{ min-width:auto; padding:10px; } /* Layout : main puis aside empilés */ .layout{ display:flex; flex-direction:column; gap:10px; margin-top:10px; } /* Grilles de cartes -> une colonne */ .big-grid{ grid-template-columns:1fr; gap:10px; } .card{ padding:10px; } .card h3{ font-size:15px; margin-top:0; margin-bottom:8px; } /* Table scrollable horizontalement */ .card table{ font-size:11px; } .card > div[style*="overflow:auto"], .card > div[style*="max-height"]{ max-height:260px; } .card table{ min-width:600px; } #tableDetailed{ overflow-x:auto; display:block; } /* Boutons rapides / actions en plein écran */ aside .card button{ width:100%; margin-bottom:6px; } #last7,#last30,#thisMonth{ margin-right:0; margin-bottom:6px; display:block; } /* Canvas : plein écran, hauteur fixe pour mobile */ canvas{ max-width:100%; } #topProducts, #catPie, #timeline, #machinesBar, #heat{ height:220px !important; } } </style>
 </head>
 <body>
   <div class="wrap">
