@@ -149,7 +149,7 @@
 /* ================= CONFIG LOAD ================= */
 async function loadConfig() {
   try {
-    const res = await fetch('client/client_1/config.json');
+    const res = await fetch('clients/client_1/config.json');
     if (!res.ok) throw new Error('config.json non trouvé');
     return await res.json();
   } catch (e) {
