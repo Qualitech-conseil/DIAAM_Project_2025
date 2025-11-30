@@ -1,602 +1,831 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>DIAAM Analytics Pro — Advanced</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DIAAM Analytics Pro — Advanced</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
-<style>
-  :root {
-    --bg: #f4f7fb;
-    --card: #fff;
-    --accent: #0ea5e9;
-  }
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --accent: #0ea5e9;
+    }
 
-  /* Base: mobile first (écran petit) */
-  * {
-    box-sizing: border-box;
-  }
+    /* ========== Base mobile first (petits écrans) ========== */
 
-  body {
-    font-family: Inter, system-ui, Arial;
-    background: #ffffff;
-    margin: 0;
-    font-size: 14px;
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-  .wrap {
-    max-width: 100%;
-    margin: 0;
-    padding: 10px;
-  }
-
-  header {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: 20px;
-  }
-
-  #status {
-    font-size: 12px;
-  }
-
-  /* Filtres en colonne, full width */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  select,
-  input,
-  button {
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #e6eef8;
-    background: #ffffff;
-    font-size: 14px;
-    width: 100%;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  /* KPI en grille 1–2 colonnes auto */
-  .kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .kpi {
-    background: var(--card);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
-  }
-
-  .small {
-    font-size: 12px;
-    color: #555;
-  }
-
-  /* Layout mobile: tout en colonne */
-  .layout {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .big-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .card {
-    background: var(--card);
-    padding: 10px;
-    border-radius: 10px;
-  }
-
-  .card h3 {
-    font-size: 15px;
-    margin: 0 0 8px;
-  }
-
-  /* Table et conteneur scrollable */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-  }
-
-  th,
-  td {
-    padding: 6px;
-    border-bottom: 1px solid #eef2f7;
-  }
-
-  #tableDetailed {
-    min-width: 600px;
-    display: block;
-  }
-
-  .table-wrapper {
-    max-height: 260px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Boutons aside full width */
-  aside .card button {
-    width: 100%;
-    margin-bottom: 6px;
-  }
-
-  /* Charts: largeur 100%, hauteur fixe sur mobile */
-  canvas {
-    max-width: 100%;
-  }
-
-  #topProducts,
-  #catPie,
-  #timeline,
-  #machinesBar,
-  #heat {
-    height: 220px !important;
-  }
-
-  /* ========================= */
-  /* Améliorations tablettes   */
-  /* ========================= */
-  @media (min-width: 600px) {
     body {
-      background: var(--bg);
-      font-size: 15px;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      font-size: 14px;
     }
 
     .wrap {
-      max-width: 960px;
-      margin: 10px auto;
-      padding: 14px;
+      max-width: 100%;
+      margin: 0;
+      padding: 10px;
     }
 
     header {
-      flex-direction: row;
-      align-items: center;
-      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
     }
 
     h1 {
-      font-size: 22px;
+      margin: 0;
+      font-size: 20px;
     }
 
     #status {
-      margin-left: auto;
+      font-size: 12px;
     }
+
+    /* Filtres : colonne, full width */
 
     .controls {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      margin-top: 10px;
     }
 
-    .controls select,
-    .controls input,
-    .controls button {
-      width: auto;
+    select,
+    input,
+    button {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e6eef8;
+      background: #ffffff;
+      font-size: 14px;
+      width: 100%;
     }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* KPI : grille 1–2 colonnes auto */
 
     .kpis {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    .card {
-      padding: 12px;
-    }
-
-    .card h3 {
-      font-size: 16px;
-    }
-  }
-
-  /* ========================= */
-  /* Bureau / grands écrans    */
-  /* ========================= */
-  @media (min-width: 1000px) {
-    .wrap {
-      max-width: 1360px;
-      margin: 18px auto;
-      padding: 18px;
-    }
-
-    h1 {
-      font-size: 24px;
-    }
-
-    .layout {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
       margin-top: 12px;
     }
 
-    .big-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+    .kpi {
+      background: var(--card);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
     }
-  }
-</style>
+
+    .small {
+      font-size: 12px;
+      color: #555;
+    }
+
+    /* Layout principal en colonne */
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    main {
+      width: 100%;
+    }
+
+    aside {
+      width: 100%;
+    }
+
+    .big-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .card h3 {
+      font-size: 15px;
+      margin: 0 0 8px;
+    }
+
+    /* Table détaillée */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    th,
+    td {
+      padding: 6px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    #tableDetailed {
+      min-width: 600px;
+      display: block;
+    }
+
+    .table-wrapper {
+      max-height: 260px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Boutons aside full width sur mobile */
+
+    aside .card button {
+      width: 100%;
+      margin-bottom: 6px;
+    }
+
+    /* Charts : largeur 100%, hauteur raisonnable sur mobile */
+
+    canvas {
+      max-width: 100%;
+    }
+
+    #topProducts,
+    #catPie,
+    #timeline,
+    #machinesBar,
+    #heat {
+      height: 220px !important;
+    }
+
+    /* ======================== */
+    /* ≥ 600px : tablette       */
+    /* ======================== */
+
+    @media (min-width: 600px) {
+      body {
+        background: var(--bg);
+        font-size: 15px;
+      }
+
+      .wrap {
+        max-width: 960px;
+        margin: 10px auto;
+        padding: 14px;
+      }
+
+      header {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      #status {
+        margin-left: auto;
+      }
+
+      .controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .controls select,
+      .controls input,
+      .controls button {
+        width: auto;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .card {
+        padding: 12px;
+      }
+
+      .card h3 {
+        font-size: 16px;
+      }
+
+      aside .card button {
+        width: auto;
+        margin-bottom: 4px;
+        margin-right: 4px;
+      }
+    }
+
+    /* ======================== */
+    /* ≥ 1000px : bureau        */
+    /* ======================== */
+
+    @media (min-width: 1000px) {
+      .wrap {
+        max-width: 1360px;
+        margin: 18px auto;
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .big-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+    }
+  </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
       <h1>DIAAM Analytics Pro</h1>
-      <div style="margin-left:auto" id="status"></div>
+      <div id="status"></div>
     </header>
 
     <div class="controls">
-      <select id="clientFilter"><option value="">Tous clients</option></select>
-      <select id="machineFilter"><option value="">Toutes machines</option></select>
-      <select id="categoryFilter"><option value="">Toutes catégories</option></select>
-      <select id="questionFilter"><option value="">Toutes questions</option></select>
-      <input type="date" id="dateFrom"/>
-      <input type="date" id="dateTo"/>
+      <select id="clientFilter">
+        <option value="">Tous clients</option>
+      </select>
+
+      <select id="machineFilter">
+        <option value="">Toutes machines</option>
+      </select>
+
+      <select id="categoryFilter">
+        <option value="">Toutes catégories</option>
+      </select>
+
+      <select id="questionFilter">
+        <option value="">Toutes questions</option>
+      </select>
+
+      <input type="date" id="dateFrom" />
+      <input type="date" id="dateTo" />
+
       <button id="apply">Appliquer</button>
       <button id="exportCsv">Export CSV</button>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
-      <div class="kpi"><div class="small">Réponses uniques (clients)</div><div id="kpClients" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Machines actives</div><div id="kpMachines" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Taux "Autre"</div><div id="kpOther" style="font-weight:700">0%</div></div>
+      <div class="kpi">
+        <div class="small">Total réponses</div>
+        <div id="kpTotal" style="font-weight:700;font-size:20px">0</div>
+      </div>
+
+      <div class="kpi">
+        <div class="small">Réponses uniques (clients)</div>
+        <div id="kpClients" style="font-weight:700">0</div>
+      </div>
+
+      <div class="kpi">
+        <div class="small">Machines actives</div>
+        <div id="kpMachines" style="font-weight:700">0</div>
+      </div>
+
+      <div class="kpi">
+        <div class="small">Taux "Autre"</div>
+        <div id="kpOther" style="font-weight:700">0%</div>
+      </div>
     </div>
 
     <div class="layout">
       <main>
         <div class="big-grid">
-          <div class="card"><h3>Top produits (bar)</h3><canvas id="topProducts"></canvas></div>
-          <div class="card"><h3>Répartition catégories</h3><canvas id="catPie"></canvas></div>
+          <div class="card">
+            <h3>Top produits (bar)</h3>
+            anvas id="topProducts"></canvas>
+          </div>
+
+          <div class="card">
+            <h3>Répartition catégories</h3>
+            anvas id="catPie"></canvas>
+          </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h3>Timeline — réponses / jour</h3>
-          <canvas id="timeline"></canvas>
+          anvas id="timeline"></canvas>
         </div>
 
         <div class="big-grid" style="margin-top:12px">
-          <div class="card"><h3>Top Machines (bar)</h3><canvas id="machinesBar"></canvas></div>
-          <div class="card"><h3>Heat (machine x category)</h3><canvas id="heat"></canvas></div>
+          <div class="card">
+            <h3>Top Machines (bar)</h3>
+            anvas id="machinesBar"></canvas>
+          </div>
+
+          <div class="card">
+            <h3>Heat (machine x category)</h3>
+            anvas id="heat"></canvas>
+          </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h3>Table détaillée</h3>
-          <div style="max-height:320px;overflow:auto">
-            <table id="tableDetailed"><thead><tr><th>Date</th><th>Client</th><th>Machine</th><th>Catégorie</th><th>Question</th><th>Choix</th></tr></thead><tbody></tbody></table>
+          <div class="table-wrapper">
+            <table id="tableDetailed">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Client</th>
+                  <th>Machine</th>
+                  <th>Catégorie</th>
+                  <th>Question</th>
+                  <th>Choix</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
           </div>
         </div>
       </main>
 
       <aside>
-        <div class="card"><h3>Filtres rapides</h3>
-          <button id="last7">7j</button><button id="last30">30j</button><button id="thisMonth">Mois</button>
+        <div class="card">
+          <h3>Filtres rapides</h3>
+          <button id="last7">7j</button>
+          <button id="last30">30j</button>
+          <button id="thisMonth">Mois</button>
         </div>
 
-        <div class="card" style="margin-top:12px"><h3>Top par catégorie</h3><div id="topByCat"></div></div>
+        <div class="card" style="margin-top:12px">
+          <h3>Top par catégorie</h3>
+          <div id="topByCat"></div>
+        </div>
 
-        <div class="card" style="margin-top:12px"><h3>Export / Actions</h3>
+        <div class="card" style="margin-top:12px">
+          <h3>Export / Actions</h3>
           <button id="btnExportPNG">Export PNG (charts)</button>
         </div>
       </aside>
     </div>
-
   </div>
 
-<script>
-/* =========== CONFIG =========== */
-const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+  <script>
+    /* =========== CONFIG =========== */
+    const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
 
-/* FIX: utiliser window.supabase et un nom différent */
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-/* ============================== */
+    /* ============================== */
 
-let rows = [], filtered = [];
+    let rows = [];
+    let filtered = [];
 
-const clientFilter = document.getElementById('clientFilter');
-const machineFilter = document.getElementById('machineFilter');
-const categoryFilter = document.getElementById('categoryFilter');
-const questionFilter = document.getElementById('questionFilter');
-const dateFrom = document.getElementById('dateFrom');
-const dateTo   = document.getElementById('dateTo');
+    const clientFilter = document.getElementById("clientFilter");
+    const machineFilter = document.getElementById("machineFilter");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const questionFilter = document.getElementById("questionFilter");
+    const dateFrom = document.getElementById("dateFrom");
+    const dateTo = document.getElementById("dateTo");
 
-const topProductsCtx = document.getElementById('topProducts').getContext('2d');
-const catPieCtx      = document.getElementById('catPie').getContext('2d');
-const timelineCtx    = document.getElementById('timeline').getContext('2d');
-const machinesBarCtx = document.getElementById('machinesBar').getContext('2d');
-const heatCtx        = document.getElementById('heat').getContext('2d');
+    const topProductsCtx = document.getElementById("topProducts").getContext("2d");
+    const catPieCtx = document.getElementById("catPie").getContext("2d");
+    const timelineCtx = document.getElementById("timeline").getContext("2d");
+    const machinesBarCtx = document.getElementById("machinesBar").getContext("2d");
+    const heatCtx = document.getElementById("heat").getContext("2d");
 
-let chartTop, chartCat, chartTime, chartMachines, chartHeat;
+    let chartTop, chartCat, chartTime, chartMachines, chartHeat;
 
-async function loadAll(){
-  document.getElementById('status').innerText = 'Chargement...';
+    async function loadAll() {
+      document.getElementById("status").innerText = "Chargement...";
 
-  const { data, error } = await sb.from('survey_results').select('*').order('created_at',{ascending:true});
+      const { data, error } = await sb
+        .from("survey_results")
+        .select("*")
+        .order("created_at", { ascending: true });
 
-  if(error){ console.error(error); alert('Erreur chargement'); return; }
+      if (error) {
+        console.error(error);
+        alert("Erreur chargement");
+        return;
+      }
 
-  rows = data || [];
-  populateFilters();
-  apply();
-  document.getElementById('status').innerText = '';
-}
-
-function populateFilters(){
-  const clients = Array.from(new Set(rows.map(r=>r.client_id).filter(Boolean))).sort();
-  clientFilter.innerHTML = '<option value="">Tous clients</option>'+clients.map(c=>`<option value="${c}">${c}</option>`).join('');
-
-  const machines = Array.from(new Set(rows.map(r=>r.machine_id).filter(Boolean))).sort();
-  machineFilter.innerHTML = '<option value="">Toutes machines</option>'+machines.map(m=>`<option value="${m}">${m}</option>`).join('');
-
-  const cats = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
-  categoryFilter.innerHTML = '<option value="">Toutes catégories</option>'+cats.map(c=>`<option>${c}</option>`).join('');
-
-  const questions = Array.from(new Set(rows.map(r=>r.question).filter(Boolean))).sort();
-  questionFilter.innerHTML = '<option value="">Toutes questions</option>'+questions.map(q=>`<option>${q}</option>`).join('');
-}
-
-function applyFilters(){
-  filtered = rows.slice();
-  const c = clientFilter.value; if(c) filtered = filtered.filter(r=>r.client_id===c);
-  const m = machineFilter.value; if(m) filtered = filtered.filter(r=>r.machine_id===m);
-  const cat = categoryFilter.value; if(cat) filtered = filtered.filter(r=>r.category===cat);
-  const q = questionFilter.value; if(q) filtered = filtered.filter(r=>r.question===q);
-
-  if(dateFrom.value) filtered = filtered.filter(r=> new Date(r.created_at) >= new Date(dateFrom.value+'T00:00:00'));
-  if(dateTo.value)   filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value+'T23:59:59'));
-
-  renderAll();
-}
-
-function renderAll(){
-  renderKPIs();
-  renderTopProducts();
-  renderCatPie();
-  renderTimeline();
-  renderMachines();
-  renderHeat();
-  renderTable();
-  renderTopByCategory();
-}
-
-function renderKPIs(){
-  document.getElementById('kpTotal').innerText = filtered.length;
-  document.getElementById('kpClients').innerText = new Set(filtered.map(r=>r.client_id)).size;
-  document.getElementById('kpMachines').innerText = new Set(filtered.map(r=>r.machine_id)).size;
-
-  const totalChoices = filtered.reduce((t,r)=> {
-    for(let i=1;i<=5;i++) if(r[`choice_${i}`]) t++;
-    return t;
-  },0);
-
-  const otherCount = filtered.reduce((t,r)=> {
-    for(let i=1;i<=5;i++) if((r[`choice_${i}`]||'').toLowerCase().startsWith('autre')) t++;
-    return t;
-  },0);
-
-  const pct = totalChoices? Math.round(otherCount/totalChoices*100):0;
-  document.getElementById('kpOther').innerText = pct + '%';
-}
-
-function aggregateChoices(rs){
-  const counts = {};
-  rs.forEach(r=>{
-    for(let i=1;i<=5;i++){
-      const v = r[`choice_${i}`];
-      if(v){ counts[v] = (counts[v]||0)+1; }
+      rows = data || [];
+      populateFilters();
+      applyFilters();
+      document.getElementById("status").innerText = "";
     }
-  });
-  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-}
 
-function renderTopProducts(){
-  const data = aggregateChoices(filtered).slice(0,12);
-  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
+    function populateFilters() {
+      const clients = Array.from(
+        new Set(rows.map((r) => r.client_id).filter(Boolean))
+      ).sort();
+      clientFilter.innerHTML =
+        '<option value="">Tous clients</option>' +
+        clients
+          .map((c) => `<option value="${c}">${c}</option>`)
+          .join("");
 
-  if(chartTop) chartTop.destroy();
+      const machines = Array.from(
+        new Set(rows.map((r) => r.machine_id).filter(Boolean))
+      ).sort();
+      machineFilter.innerHTML =
+        '<option value="">Toutes machines</option>' +
+        machines
+          .map((m) => `<option value="${m}">${m}</option>`)
+          .join("");
 
-  chartTop = new Chart(topProductsCtx, {
-    type:'bar',
-    data:{labels,datasets:[{label:'Sélections',data:vals}]},
-    options:{responsive:true}
-  });
-}
+      const cats = Array.from(
+        new Set(rows.map((r) => r.category).filter(Boolean))
+      ).sort();
+      categoryFilter.innerHTML =
+        '<option value="">Toutes catégories</option>' +
+        cats.map((c) => `<option>${c}</option>`).join("");
 
-function renderCatPie(){
-  const counts = {};
-  filtered.forEach(r=>{ counts[r.category]=(counts[r.category]||0)+1; });
-
-  const labels = Object.keys(counts), data = Object.values(counts);
-
-  if(chartCat) chartCat.destroy();
-
-  chartCat = new Chart(catPieCtx, {
-    type:'doughnut',
-    data:{labels,datasets:[{data}]},
-    options:{responsive:true}
-  });
-}
-
-function renderTimeline(){
-  const perDay = {};
-  filtered.forEach(r=>{
-    const d = new Date(r.created_at).toISOString().slice(0,10);
-    perDay[d] = (perDay[d]||0)+1;
-  });
-
-  const labels = Object.keys(perDay).sort();
-  const data = labels.map(l=>perDay[l]);
-
-  if(chartTime) chartTime.destroy();
-
-  chartTime = new Chart(timelineCtx, {
-    type:'line',
-    data:{labels,datasets:[{label:'Réponses',data}]},
-    options:{responsive:true}
-  });
-}
-
-function renderMachines(){
-  const counts = {};
-  filtered.forEach(r=>{ counts[r.machine_id] = (counts[r.machine_id]||0)+1; });
-
-  const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
-
-  if(chartMachines) chartMachines.destroy();
-
-  chartMachines = new Chart(machinesBarCtx, {
-    type:'bar',
-    data:{labels,datasets:[{data:vals}]},
-    options:{responsive:true}
-  });
-}
-
-function renderHeat(){
-  const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
-  const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
-
-  const matrix = machines.map(m=>{
-    const row = cats.map(c=> filtered.filter(r=>r.machine_id===m && r.category===c).length );
-    return { machine:m, row };
-  });
-
-  const datasets = cats.map((cat,i)=>({
-    label:cat,
-    data: matrix.map(m=>m.row[i]),
-    stack:'s'
-  }));
-
-  if(chartHeat) chartHeat.destroy();
-
-  chartHeat = new Chart(heatCtx, {
-    type:'bar',
-    data:{labels:machines, datasets},
-    options:{indexAxis:'y', responsive:true, plugins:{legend:{position:'bottom'}}}
-  });
-}
-
-function renderTable(){
-  const tbody = document.querySelector('#tableDetailed tbody');
-  tbody.innerHTML='';
-
-  filtered.slice().reverse().forEach(r=>{
-    const tr = document.createElement('tr');
-    const choice = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
-
-    tr.innerHTML = `
-      <td>${new Date(r.created_at).toLocaleString()}</td>
-      <td>${r.client_id||''}</td>
-      <td>${r.machine_id||''}</td>
-      <td>${r.category||''}</td>
-      <td>${r.question||''}</td>
-      <td>${choice}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function renderTopByCategory(){
-  const byCat = {};
-
-  filtered.forEach(r=>{
-    byCat[r.category] = byCat[r.category]||{};
-    for(let i=1;i<=5;i++){
-      const v = r[`choice_${i}`]; if(!v) continue;
-      byCat[r.category][v] = (byCat[r.category][v]||0)+1;
+      const questions = Array.from(
+        new Set(rows.map((r) => r.question).filter(Boolean))
+      ).sort();
+      questionFilter.innerHTML =
+        '<option value="">Toutes questions</option>' +
+        questions.map((q) => `<option>${q}</option>`).join("");
     }
-  });
 
-  const div = document.getElementById('topByCat');
-  div.innerHTML='';
+    function applyFilters() {
+      filtered = rows.slice();
 
-  Object.keys(byCat).forEach(cat=>{
-    const arr = Object.entries(byCat[cat]).sort((a,b)=>b[1]-a[1]).slice(0,3);
-    const el = document.createElement('div');
+      const c = clientFilter.value;
+      if (c) filtered = filtered.filter((r) => r.client_id === c);
 
-    el.innerHTML = `<strong>${cat}</strong><div>${arr.map(a=>`${a[0]} (${a[1]})`).join(' • ')}</div>`;
-    div.appendChild(el);
-  });
-}
+      const m = machineFilter.value;
+      if (m) filtered = filtered.filter((r) => r.machine_id === m);
 
-// events
-document.getElementById('apply').addEventListener('click', applyFilters);
+      const cat = categoryFilter.value;
+      if (cat) filtered = filtered.filter((r) => r.category === cat);
 
-document.getElementById('exportCsv').addEventListener('click',()=>{
-  const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
-  const rowsData = filtered;
+      const q = questionFilter.value;
+      if (q) filtered = filtered.filter((r) => r.question === q);
 
-  const csv = [header.join(',')].concat(
-    rowsData.map(r=>header.map(h=>`"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','))
-  ).join('\n');
+      if (dateFrom.value) {
+        filtered = filtered.filter(
+          (r) =>
+            new Date(r.created_at) >=
+            new Date(dateFrom.value + "T00:00:00")
+        );
+      }
 
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='export.csv';
-  a.click();
-});
+      if (dateTo.value) {
+        filtered = filtered.filter(
+          (r) =>
+            new Date(r.created_at) <=
+            new Date(dateTo.value + "T23:59:59")
+        );
+      }
 
-// quick filters
-document.getElementById('last7').addEventListener('click',()=>{
-  const to=new Date();
-  const from=new Date();
-  from.setDate(to.getDate()-7);
-  dateFrom.value=from.toISOString().slice(0,10);
-  dateTo.value=to.toISOString().slice(0,10);
-  applyFilters();
-});
+      renderAll();
+    }
 
-document.getElementById('last30').addEventListener('click',()=>{
-  const to=new Date();
-  const from=new Date();
-  from.setDate(to.getDate()-30);
-  dateFrom.value=from.toISOString().slice(0,10);
-  dateTo.value=to.toISOString().slice(0,10);
-  applyFilters();
-});
+    function renderAll() {
+      renderKPIs();
+      renderTopProducts();
+      renderCatPie();
+      renderTimeline();
+      renderMachines();
+      renderHeat();
+      renderTable();
+      renderTopByCategory();
+    }
 
-document.getElementById('thisMonth').addEventListener('click',()=>{
-  const now=new Date();
-  dateFrom.value = new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
-  dateTo.value   = new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().slice(0,10);
-  applyFilters();
-});
+    function renderKPIs() {
+      document.getElementById("kpTotal").innerText = filtered.length;
+      document.getElementById("kpClients").innerText = new Set(
+        filtered.map((r) => r.client_id)
+      ).size;
+      document.getElementById("kpMachines").innerText = new Set(
+        filtered.map((r) => r.machine_id)
+      ).size;
 
-loadAll();
-</script>
+      const totalChoices = filtered.reduce((t, r) => {
+        for (let i = 1; i <= 5; i++) if (r[`choice_${i}`]) t++;
+        return t;
+      }, 0);
 
+      const otherCount = filtered.reduce((t, r) => {
+        for (let i = 1; i <= 5; i++)
+          if ((r[`choice_${i}`] || "").toLowerCase().startsWith("autre"))
+            t++;
+        return t;
+      }, 0);
+
+      const pct = totalChoices ? Math.round((otherCount / totalChoices) * 100) : 0;
+      document.getElementById("kpOther").innerText = pct + "%";
+    }
+
+    function aggregateChoices(rs) {
+      const counts = {};
+      rs.forEach((r) => {
+        for (let i = 1; i <= 5; i++) {
+          const v = r[`choice_${i}`];
+          if (v) {
+            counts[v] = (counts[v] || 0) + 1;
+          }
+        }
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderTopProducts() {
+      const data = aggregateChoices(filtered).slice(0, 12);
+      const labels = data.map((d) => d[0]);
+      const vals = data.map((d) => d[1]);
+
+      if (chartTop) chartTop.destroy();
+
+      chartTop = new Chart(topProductsCtx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{ label: "Sélections", data: vals }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    function renderCatPie() {
+      const counts = {};
+      filtered.forEach((r) => {
+        counts[r.category] = (counts[r.category] || 0) + 1;
+      });
+
+      const labels = Object.keys(counts);
+      const data = Object.values(counts);
+
+      if (chartCat) chartCat.destroy();
+
+      chartCat = new Chart(catPieCtx, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{ data }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    function renderTimeline() {
+      const perDay = {};
+      filtered.forEach((r) => {
+        const d = new Date(r.created_at).toISOString().slice(0, 10);
+        perDay[d] = (perDay[d] || 0) + 1;
+      });
+
+      const labels = Object.keys(perDay).sort();
+      const data = labels.map((l) => perDay[l]);
+
+      if (chartTime) chartTime.destroy();
+
+      chartTime = new Chart(timelineCtx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{ label: "Réponses", data }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    function renderMachines() {
+      const counts = {};
+      filtered.forEach((r) => {
+        counts[r.machine_id] = (counts[r.machine_id] || 0) + 1;
+      });
+
+      const data = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12);
+      const labels = data.map((d) => d[0]);
+      const vals = data.map((d) => d[1]);
+
+      if (chartMachines) chartMachines.destroy();
+
+      chartMachines = new Chart(machinesBarCtx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{ data: vals }],
+        },
+        options: { responsive: true },
+      });
+    }
+
+    function renderHeat() {
+      const cats = Array.from(
+        new Set(filtered.map((r) => r.category))
+      ).sort();
+      const machines = Array.from(
+        new Set(filtered.map((r) => r.machine_id))
+      ).sort();
+
+      const matrix = machines.map((m) => {
+        const row = cats.map(
+          (c) =>
+            filtered.filter(
+              (r) => r.machine_id === m && r.category === c
+            ).length
+        );
+        return { machine: m, row };
+      });
+
+      const datasets = cats.map((cat, i) => ({
+        label: cat,
+        data: matrix.map((m) => m.row[i]),
+        stack: "s",
+      }));
+
+      if (chartHeat) chartHeat.destroy();
+
+      chartHeat = new Chart(heatCtx, {
+        type: "bar",
+        data: { labels: machines, datasets },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          plugins: { legend: { position: "bottom" } },
+        },
+      });
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector("#tableDetailed tbody");
+      tbody.innerHTML = "";
+
+      filtered
+        .slice()
+        .reverse()
+        .forEach((r) => {
+          const tr = document.createElement("tr");
+          const choice = [
+            r.choice_1,
+            r.choice_2,
+            r.choice_3,
+            r.choice_4,
+            r.choice_5,
+          ]
+            .filter(Boolean)
+            .join(" | ");
+
+          tr.innerHTML = `
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+            <td>${r.client_id || ""}</td>
+            <td>${r.machine_id || ""}</td>
+            <td>${r.category || ""}</td>
+            <td>${r.question || ""}</td>
+            <td>${choice}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+    }
+
+    function renderTopByCategory() {
+      const byCat = {};
+
+      filtered.forEach((r) => {
+        byCat[r.category] = byCat[r.category] || {};
+        for (let i = 1; i <= 5; i++) {
+          const v = r[`choice_${i}`];
+          if (!v) continue;
+          byCat[r.category][v] = (byCat[r.category][v] || 0) + 1;
+        }
+      });
+
+      const div = document.getElementById("topByCat");
+      div.innerHTML = "";
+
+      Object.keys(byCat).forEach((cat) => {
+        const arr = Object.entries(byCat[cat])
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3);
+        const el = document.createElement("div");
+
+        el.innerHTML = `
+          <strong>${cat}</strong>
+          <div>${arr.map((a) => `${a[0]} (${a[1]})`).join(" • ")}</div>
+        `;
+        div.appendChild(el);
+      });
+    }
+
+    // events
+    document
+      .getElementById("apply")
+      .addEventListener("click", applyFilters);
+
+    document
+      .getElementById("exportCsv")
+      .addEventListener("click", () => {
+        const header = [
+          "created_at",
+          "client_id",
+          "machine_id",
+          "category",
+          "question",
+          "choice_1",
+          "choice_2",
+          "choice_3",
+          "choice_4",
+          "choice_5",
+        ];
+        const rowsData = filtered;
+
+        const csv = [header.join(",")]
+          .concat(
+            rowsData.map((r) =>
+              header
+                .map(
+                  (h) =>
+                    `"${(r[h] || "")
+                      .toString()
+                      .replace(/"/g, '""')}"`
+                )
+                .join(",")
+            )
+          )
+          .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "export.csv";
+        a.click();
+      });
+
+    // quick filters
+    document.getElementById("last7").addEventListener("click", () => {
+      const to = new Date();
+      const from = new Date();
+      from.setDate(to.getDate() - 7);
+      dateFrom.value = from.toISOString().slice(0, 10);
+      dateTo.value = to.toISOString().slice(0, 10);
+      applyFilters();
+    });
+
+    document
+      .getElementById("last30")
+      .addEventListener("click", () => {
+        const to = new Date();
+        const from = new Date();
+        from.setDate(to.getDate() - 30);
+        dateFrom.value = from.toISOString().slice(0, 10);
+        dateTo.value = to.toISOString().slice(0, 10);
+        applyFilters();
+      });
+
+    document
+      .getElementById("thisMonth")
+      .addEventListener("click", () => {
+        const now = new Date();
+        dateFrom.value = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1
+        )
+          .toISOString()
+          .slice(0, 10);
+        dateTo.value = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0
+        )
+          .toISOString()
+          .slice(0, 10);
+        applyFilters();
+      });
+
+    loadAll();
+  </script>
 </body>
 </html>
 
-</script>
-</body>
-</html>
