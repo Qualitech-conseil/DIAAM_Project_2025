@@ -5,29 +5,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>DIAAM Analytics Pro — Advanced</title>
 
-<!-- Chart.js -->
+<!-- Dependencies (order matters) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<!-- html2canvas -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<!-- jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<!-- XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- Supabase UMD: must be loaded before using window.supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/dist/umd/supabase.js"></script>
 
 <style>
   :root{
-    --bg:#0f1724;
-    --card:#0b1220;
-    --muted:#94a3b8;
-    --accent:#06b6d4;
-    --glass: rgba(255,255,255,0.03);
+    --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#06b6d4; --glass: rgba(255,255,255,0.03);
+    --text:#e6eef8; --card-2:#071224;
   }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:#e6eef8;background:linear-gradient(180deg,#071025 0%, #071a2a 80%);}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:var(--text);background:linear-gradient(180deg,#071025 0%, #071a2a 80%);}
   .wrap{max-width:1300px;margin:14px auto;padding:14px}
   header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   h1{margin:0;font-size:18px}
   .topbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-  select,input,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--card);color:#e6eef8}
+  select,input,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--card);color:var(--text)}
   .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .kpis{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
   .kpi{background:var(--glass);padding:12px;border-radius:10px;min-width:160px;box-shadow:0 6px 20px rgba(2,6,23,0.5)}
@@ -35,19 +31,21 @@
   .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   canvas{width:100% !important;height:auto !important}
-  .table-scroll{max-height:300px;overflow:auto;margin-top:8px}
+  .table-scroll{max-height:360px;overflow:auto;margin-top:8px}
   table{width:100%;border-collapse:collapse;color:#cbd5e1}
   th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px}
   .controls {display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .btn {background:var(--accent);color:#042028;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-  .ghost {background:transparent;border:1px solid rgba(255,255,255,0.06)}
+  .ghost {background:transparent;border:1px solid rgba(255,255,255,0.06);padding:7px 10px;border-radius:8px;cursor:pointer}
   .small {font-size:13px;color:var(--muted)}
   footer{margin-top:12px;color:var(--muted);font-size:13px}
-  @media(max-width:1000px){ .layout{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+  @media(max-width:1100px){ .layout{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} .kpi{min-width:120px} .table-scroll{max-height:240px} }
+  /* light theme overrides (applied by JS toggle) */
+  .light { --bg:#f8fafc; --card:#fff; --muted:#475569; --accent:#0ea5e9; --text:#0b1220; --glass: rgba(2,6,23,0.03); background:#f8fafc; }
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="appWrap">
     <header>
       <h1>DIAAM Analytics Pro — Advanced</h1>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
@@ -58,13 +56,13 @@
     </header>
 
     <div class="topbar">
-      <div class="filters">
-        <select id="clientFilter"><option value="">Tous clients</option></select>
-        <select id="machineFilter"><option value="">Toutes machines</option></select>
-        <select id="categoryFilter"><option value="">Toutes catégories</option></select>
-        <select id="questionFilter"><option value="">Toutes questions</option></select>
-        <input type="date" id="dateFrom"/>
-        <input type="date" id="dateTo"/>
+      <div class="filters" role="region" aria-label="Filtres">
+        <select id="clientFilter" aria-label="Client"><option value="">Tous clients</option></select>
+        <select id="machineFilter" aria-label="Machine"><option value="">Toutes machines</option></select>
+        <select id="categoryFilter" aria-label="Catégorie"><option value="">Toutes catégories</option></select>
+        <select id="questionFilter" aria-label="Question"><option value="">Toutes questions</option></select>
+        <input type="date" id="dateFrom" aria-label="Date de"/>
+        <input type="date" id="dateTo" aria-label="Date à"/>
         <button id="applyFilters" class="btn">Appliquer</button>
       </div>
 
@@ -76,45 +74,45 @@
       </div>
     </div>
 
-    <div class="kpis" id="kpis">
+    <div class="kpis" id="kpis" aria-hidden="false">
       <div class="kpi"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
       <div class="kpi"><div class="small">Clients</div><div id="kpClients" style="font-weight:700">0</div></div>
       <div class="kpi"><div class="small">Machines</div><div id="kpMachines" style="font-weight:700">0</div></div>
       <div class="kpi"><div class="small">Top produit</div><div id="kpTop" style="font-weight:700">—</div></div>
     </div>
 
-    <div class="layout">
+    <div class="layout" id="layoutArea">
       <main>
         <div class="grid2">
           <div class="card">
             <h3 style="margin-top:0">Top produits (bar)</h3>
-            <canvas id="chartTopProducts" height="200"></canvas>
+            <canvas id="chartTopProducts" height="200" aria-label="Top produits"></canvas>
           </div>
           <div class="card">
             <h3 style="margin-top:0">Répartition catégories (doughnut)</h3>
-            <canvas id="chartCategories" height="200"></canvas>
+            <canvas id="chartCategories" height="200" aria-label="Répartition catégories"></canvas>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h3 style="margin-top:0">Timeline — Réponses / jour</h3>
-          <canvas id="chartTimeline" height="120"></canvas>
+          <canvas id="chartTimeline" height="120" aria-label="Timeline"></canvas>
         </div>
 
         <div class="grid2" style="margin-top:12px">
           <div class="card">
             <h3 style="margin-top:0">Top machines</h3>
-            <canvas id="chartMachines" height="200"></canvas>
+            <canvas id="chartMachines" height="200" aria-label="Top machines"></canvas>
           </div>
           <div class="card">
             <h3 style="margin-top:0">Heat (machines x catégories)</h3>
-            <canvas id="chartHeat" height="200"></canvas>
+            <canvas id="chartHeat" height="200" aria-label="Heatmap"></canvas>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
-          <h3 style="margin-top:0">Répartition par question (sélection)</h3>
-          <canvas id="chartQuestion" height="160"></canvas>
+          <h3 style="margin-top:0">Répartition par question</h3>
+          <canvas id="chartQuestion" height="160" aria-label="Questions"></canvas>
         </div>
       </main>
 
@@ -122,7 +120,7 @@
         <div class="card">
           <h3 style="margin-top:0">Table (extraits)</h3>
           <div class="table-scroll">
-            <table id="tbl">
+            <table id="tbl" aria-label="Tableau résultats">
               <thead><tr><th>Date</th><th>Client</th><th>Machine</th><th>Catégorie</th><th>Question</th><th>Choix</th></tr></thead>
               <tbody></tbody>
             </table>
@@ -144,87 +142,293 @@
     <footer class="small">DIAAM Analytics Pro — Advanced • Responsive & exports</footer>
   </div>
 
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/dist/umd/supabase.js"></script>
-  
-<!-- Main JS module -->
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+  // ---------- CONFIG (edit here if no config.json) ----------
+  // If you prefer to use config.json, load it and override these values.
+  const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+  const TABLE_NAME = "survey_results";
 
-    // ---------------- SUPABASE ----------------
-    const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+  // ---------- Supabase client (UMD loaded earlier) ----------
+  if (!window.supabase || !window.supabase.createClient) {
+    console.error("Supabase SDK non chargé. Ajoute le script supabase.js avant ce script.");
+    return;
+  }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    // ★ BONNE LIGNE À UTILISER
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // ---------- DOM refs ----------
+  const clientFilter = document.getElementById('clientFilter');
+  const machineFilter = document.getElementById('machineFilter');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const questionFilter = document.getElementById('questionFilter');
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  const applyBtn = document.getElementById('applyFilters');
+  const btnRefresh = document.getElementById('btnRefresh');
+  const btnExportCSV = document.getElementById('exportCSV');
+  const btnExportXLS = document.getElementById('exportXLS');
+  const btnExportPDF = document.getElementById('exportPDF');
+  const btnLast7 = document.getElementById('last7');
+  const btnLast30 = document.getElementById('last30');
+  const btnThisMonth = document.getElementById('thisMonth');
+  const btnAll = document.getElementById('all');
 
-    console.log("Supabase chargé :", supabase);
-  
-    // ---------------- ELEMENTS FILTRES ----------------
-    const clientSelect  = document.getElementById("clientFilter");
-    const machineSelect = document.getElementById("machineFilter");
-    const categorySelect = document.getElementById("categoryFilter");
-    const questionSelect = document.getElementById("questionFilter");
-    const dateStart     = document.getElementById("dateFrom");
-    const dateEnd       = document.getElementById("dateTo");
-    const applyBtn      = document.getElementById("applyFilters");
+  const kpTotal = document.getElementById('kpTotal');
+  const kpClients = document.getElementById('kpClients');
+  const kpMachines = document.getElementById('kpMachines');
+  const kpTop = document.getElementById('kpTop');
 
-    // Vérification de sécurité
-    if (!clientSelect || !machineSelect || !applyBtn) {
-        console.error("Certains éléments du DOM n'ont pas été trouvés.");
-        return;
+  const tblBody = document.querySelector('#tbl tbody');
+
+  const ctxTop = document.getElementById('chartTopProducts').getContext('2d');
+  const ctxCat = document.getElementById('chartCategories').getContext('2d');
+  const ctxTime = document.getElementById('chartTimeline').getContext('2d');
+  const ctxMachines = document.getElementById('chartMachines').getContext('2d');
+  const ctxHeat = document.getElementById('chartHeat').getContext('2d');
+  const ctxQuestion = document.getElementById('chartQuestion').getContext('2d');
+
+  // ---------- state ----------
+  let rows = [];        // full rows from DB
+  let filtered = [];    // after filters
+  let charts = { top:null, cat:null, time:null, machines:null, heat:null, question:null };
+
+  // ---------- helpers ----------
+  const fmtDate = d => d ? new Date(d).toLocaleString() : '';
+  const safe = v => v == null ? '' : v;
+
+  function aggregateChoices(rs){
+    const counts = {};
+    rs.forEach(r=>{
+      for(let i=1;i<=5;i++){
+        const v = r[`choice_${i}`];
+        if (v) counts[v] = (counts[v]||0) + 1;
+      }
+    });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  }
+
+  // ---------- fetch data ----------
+  async function fetchAll() {
+    try {
+      document.getElementById('userBadge').innerText = 'Chargement...';
+      const { data, error } = await sb
+        .from(TABLE_NAME)
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(10000); // safety limit
+
+      if (error) { console.error(error); alert('Erreur lecture Supabase: '+error.message); document.getElementById('userBadge').innerText='Erreur'; return; }
+      rows = data || [];
+      populateFilters();
+      applyFilters();
+      document.getElementById('userBadge').innerText = 'Visiteur';
+    } catch (e) {
+      console.error(e);
+      document.getElementById('userBadge').innerText = 'Erreur';
     }
+  }
 
+  // ---------- populate filters ----------
+  function populateFilters(){
+    const clients = Array.from(new Set(rows.map(r=>r.client_id).filter(Boolean))).sort();
+    const machines = Array.from(new Set(rows.map(r=>r.machine_id).filter(Boolean))).sort();
+    const cats = Array.from(new Set(rows.map(r=>r.category).filter(Boolean))).sort();
+    const questions = Array.from(new Set(rows.map(r=>r.question).filter(Boolean))).sort();
 
-    // ---------------- LOAD INITIAL DATA ----------------
-    async function fetchAll() {
+    clientFilter.innerHTML = '<option value="">Tous clients</option>' + clients.map(c=>`<option value="${c}">${c}</option>`).join('');
+    machineFilter.innerHTML = '<option value="">Toutes machines</option>' + machines.map(m=>`<option value="${m}">${m}</option>`).join('');
+    categoryFilter.innerHTML = '<option value="">Toutes catégories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    questionFilter.innerHTML = '<option value="">Toutes questions</option>' + questions.map(q=>`<option value="${q}">${q}</option>`).join('');
+  }
 
-        let query = supabase.from("survey_results").select("*");
+  // ---------- apply filters ----------
+  function applyFilters(){
+    filtered = rows.slice();
 
-        if (clientSelect.value)
-            query = query.eq("client_id", clientSelect.value);
+    const c = clientFilter.value; if (c) filtered = filtered.filter(r => r.client_id === c);
+    const m = machineFilter.value; if (m) filtered = filtered.filter(r => r.machine_id === m);
+    const cat = categoryFilter.value; if (cat) filtered = filtered.filter(r => r.category === cat);
+    const q = questionFilter.value; if (q) filtered = filtered.filter(r => r.question === q);
 
-        if (machineSelect.value)
-            query = query.eq("machine_id", machineSelect.value);
+    if (dateFrom.value) filtered = filtered.filter(r => new Date(r.created_at) >= new Date(dateFrom.value + 'T00:00:00'));
+    if (dateTo.value) filtered = filtered.filter(r => new Date(r.created_at) <= new Date(dateTo.value + 'T23:59:59'));
 
-        if (categorySelect.value)
-            query = query.eq("category", categorySelect.value);
+    renderAll();
+  }
 
-        if (questionSelect.value)
-            query = query.eq("question", questionSelect.value);
+  // ---------- renderers ----------
+  function renderKPIs(){
+    kpTotal.innerText = filtered.length;
+    kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size;
+    kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size;
+    const agg = aggregateChoices(filtered);
+    kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—';
+  }
 
-        if (dateStart.value)
-            query = query.gte("created_at", dateStart.value);
+  function renderTable(limit = 300){
+    tblBody.innerHTML = '';
+    filtered.slice().reverse().slice(0, limit).forEach(r=>{
+      const choices = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${fmtDate(r.created_at)}</td><td>${safe(r.client_id)}</td><td>${safe(r.machine_id)}</td><td>${safe(r.category)}</td><td>${safe(r.question)}</td><td>${safe(choices)}</td>`;
+      tblBody.appendChild(tr);
+    });
+  }
 
-        if (dateEnd.value)
-            query = query.lte("created_at", dateEnd.value + "T23:59:59");
+  function renderTopProducts(){
+    const data = aggregateChoices(filtered).slice(0,20);
+    const labels = data.map(d=>d[0]); const vals = data.map(d=>d[1]);
+    if (charts.top) charts.top.destroy();
+    charts.top = new Chart(ctxTop, { type:'bar', data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*40%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
+  }
 
-        const { data, error } = await query;
+  function renderCatPie(){
+    const counts = {}; filtered.forEach(r=> counts[r.category] = (counts[r.category]||0)+1 );
+    const labels = Object.keys(counts); const data = Object.values(counts);
+    if (charts.cat) charts.cat.destroy();
+    charts.cat = new Chart(ctxCat, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>`hsl(${i*60%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false} });
+  }
 
-        if (error) {
-            console.error("Erreur chargement :", error);
-            return;
-        }
+  function renderTimeline(){
+    const perDay = {};
+    filtered.forEach(r=> {
+      if (!r.created_at) return;
+      const d = new Date(r.created_at).toISOString().slice(0,10);
+      perDay[d] = (perDay[d]||0) + 1;
+    });
+    const labels = Object.keys(perDay).sort(); const data = labels.map(l=>perDay[l]);
+    if (charts.time) charts.time.destroy();
+    charts.time = new Chart(ctxTime, { type:'line', data:{ labels, datasets:[{ label:'Réponses', data, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.12)', fill:true }] }, options:{responsive:true, maintainAspectRatio:false} });
+  }
 
-        renderDashboard(data);
+  function renderMachines(){
+    const counts = {}; filtered.forEach(r=> counts[r.machine_id] = (counts[r.machine_id]||0)+1 );
+    const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
+    if (charts.machines) charts.machines.destroy();
+    charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*45%360} 70% 45%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
+  }
+
+  function renderHeat(){
+    const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
+    const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
+    if (!cats.length || !machines.length) {
+      if (charts.heat) { charts.heat.destroy(); charts.heat = null; }
+      return;
     }
+    const datasets = cats.map((cat,i)=>({
+      label: cat,
+      data: machines.map(m => filtered.filter(r=> r.machine_id===m && r.category===cat).length),
+      stack: 's',
+      backgroundColor: `hsl(${i*50%360} 70% 45%)`
+    }));
+    if (charts.heat) charts.heat.destroy();
+    charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels: machines, datasets }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
+  }
 
+  function renderQuestionChart(){
+    const counts = {}; filtered.forEach(r => { const k = r.question||'—'; counts[k] = (counts[k]||0)+1; });
+    const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,12);
+    const data = labels.map(l=>counts[l]);
+    if (charts.question) charts.question.destroy();
+    charts.question = new Chart(ctxQuestion, { type:'polarArea', data:{ labels, datasets:[{ data, backgroundColor:labels.map((_,i)=>`hsl(${i*30%360} 70% 50%)`) }] }, options:{responsive:true, maintainAspectRatio:false} });
+  }
 
-    // ---------------- RENDER ----------------
-    function renderDashboard(data) {
-        console.log("Données filtrées :", data);
-        // Tu ajouteras les graphes ici
+  function renderAll(){
+    renderKPIs();
+    renderTopProducts();
+    renderCatPie();
+    renderTimeline();
+    renderMachines();
+    renderHeat();
+    renderQuestionChart();
+    renderTable();
+  }
+
+  // ---------- exports ----------
+  function exportCSV(){
+    if (!filtered.length) return alert('Aucune donnée');
+    const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
+    const rowsCsv = filtered.map(r => header.map(h=> `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+    const csv = [header.join(',')].concat(rowsCsv).join('\n');
+    const blob = new Blob([csv], { type:'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  function exportXLS(){
+    if (!filtered.length) return alert('Aucune donnée');
+    const wb = XLSX.utils.book_new();
+    const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
+    const data = [header].concat(filtered.map(r => header.map(h=> r[h] || '')));
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Export');
+    XLSX.writeFile(wb, 'export.xlsx');
+  }
+
+  async function exportPDF(){
+    const area = document.getElementById('layoutArea');
+    const canvas = await html2canvas(area, { scale: 1.5, backgroundColor: null });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const imgW = pageW - 40;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    doc.addImage(imgData, 'PNG', 20, 20, imgW, imgH);
+    doc.save('dashboard.pdf');
+  }
+
+  // ---------- quick helpers ----------
+  function setDateRange(days){
+    const to = new Date(); const from = new Date(); from.setDate(to.getDate() - days);
+    dateFrom.value = from.toISOString().slice(0,10);
+    dateTo.value = to.toISOString().slice(0,10);
+    applyFilters();
+  }
+
+  // ---------- events ----------
+  applyBtn.addEventListener('click', applyFilters);
+  btnRefresh.addEventListener('click', fetchAll);
+  btnExportCSV.addEventListener('click', exportCSV);
+  btnExportXLS.addEventListener('click', exportXLS);
+  btnExportPDF.addEventListener('click', exportPDF);
+
+  btnLast7.addEventListener('click', ()=> setDateRange(7));
+  btnLast30.addEventListener('click', ()=> setDateRange(30));
+  btnThisMonth.addEventListener('click', ()=> {
+    const now = new Date();
+    dateFrom.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+    dateTo.value = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
+    applyFilters();
+  });
+  btnAll.addEventListener('click', ()=> { dateFrom.value=''; dateTo.value=''; clientFilter.value=''; machineFilter.value=''; categoryFilter.value=''; questionFilter.value=''; applyFilters(); });
+
+  // theme toggle
+  document.getElementById('btnTheme').addEventListener('click', ()=>{
+    const wrap = document.getElementById('appWrap');
+    wrap.classList.toggle('light');
+  });
+
+  // login stub (optional)
+  document.getElementById('btnLogin').addEventListener('click', async ()=>{
+    const email = prompt('Email admin:'); if(!email) return;
+    const pass = prompt('Mot de passe:'); if(!pass) return;
+    try {
+      const res = await sb.auth.signInWithPassword({ email, password: pass });
+      if (res.error) { alert('Erreur login: '+res.error.message); return; }
+      document.getElementById('userBadge').innerText = email;
+      alert('Connecté');
+    } catch(e){
+      console.error(e); alert('Erreur auth: check console');
     }
+  });
 
+  // initial load
+  await fetchAll();
 
-    // ---------------- ACTION FILTRES ----------------
-    applyBtn.addEventListener("click", fetchAll);
-
-    // Lancer au démarrage
-    fetchAll();
-});
+}); // DOMContentLoaded
 </script>
-
 
 </body>
 </html>
+
