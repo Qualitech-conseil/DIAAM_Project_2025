@@ -3,51 +3,76 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DIAAM Analytics Pro — Advanced</title>
+<title>DIAAM Analytics — Pro (Glass · Mobile)</title>
 
 <!-- Dependencies (order matters) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<!-- Supabase UMD: must be loaded before using window.supabase -->
+<!-- Supabase UMD (must be before usage) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/dist/umd/supabase.js"></script>
 
 <style>
+  /* ---------- Theme / glass morphism / mobile-first ---------- */
   :root{
-    --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#06b6d4; --glass: rgba(255,255,255,0.03);
-    --text:#e6eef8; --card-2:#071224;
+    --bg-dark: linear-gradient(180deg,#071025 0%, #071a2a 80%);
+    --bg-light: linear-gradient(180deg,#f8fafc 0%, #eef2f7 100%);
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.08);
+    --accent: #06b6d4;
+    --muted: #94a3b8;
+    --card-radius: 14px;
+    --max-canvas-height: 320px;
   }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;color:var(--text);background:linear-gradient(180deg,#071025 0%, #071a2a 80%);}
-  .wrap{max-width:1300px;margin:14px auto;padding:14px}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg-dark);color:#e6eef8}
+  /* container */
+  .wrap{max-width:1200px;margin:12px auto;padding:14px}
   header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   h1{margin:0;font-size:18px}
-  .topbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-  select,input,button{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--card);color:var(--text)}
+  /* glass cards */
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(6px) saturate(120%);
+    border-radius: var(--card-radius);
+    padding:12px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+  }
+  /* layout */
+  .topbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
   .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  select,input,button{padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.18);color:inherit}
+  .btn {background:var(--accent);color:#042028;border:none;padding:8px 12px;border-radius:10px;cursor:pointer}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;cursor:pointer}
   .kpis{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
-  .kpi{background:var(--glass);padding:12px;border-radius:10px;min-width:160px;box-shadow:0 6px 20px rgba(2,6,23,0.5)}
-  .layout{display:grid;grid-template-columns:1fr 420px;gap:12px;margin-top:12px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  canvas{width:100% !important;height:auto !important}
+  .kpi{min-width:140px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
+  .layout{display:grid;grid-template-columns:1fr 380px;gap:12px;margin-top:12px}
+  main .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  canvas{width:100% !important;height:auto !important;max-height:var(--max-canvas-height) !important}
   .table-scroll{max-height:360px;overflow:auto;margin-top:8px}
   table{width:100%;border-collapse:collapse;color:#cbd5e1}
   th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px}
-  .controls {display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .btn {background:var(--accent);color:#042028;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-  .ghost {background:transparent;border:1px solid rgba(255,255,255,0.06);padding:7px 10px;border-radius:8px;cursor:pointer}
-  .small {font-size:13px;color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
   footer{margin-top:12px;color:var(--muted);font-size:13px}
-  @media(max-width:1100px){ .layout{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} .kpi{min-width:120px} .table-scroll{max-height:240px} }
-  /* light theme overrides (applied by JS toggle) */
-  .light { --bg:#f8fafc; --card:#fff; --muted:#475569; --accent:#0ea5e9; --text:#0b1220; --glass: rgba(2,6,23,0.03); background:#f8fafc; }
+  /* responsive mobile-first */
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr}
+    main .grid2{grid-template-columns:1fr}
+    :root{--max-canvas-height:220px}
+    .table-scroll{max-height:220px}
+  }
+  /* light theme toggled class */
+  .light body, .light .wrap { color:#0b1220; }
+  .light { background:var(--bg-light); color:#0b1220; }
+  .light .card { background: rgba(255,255,255,0.9); border:1px solid rgba(2,6,23,0.04); box-shadow: 0 6px 18px rgba(2,6,23,0.06) }
+  .light select,input,button{background:#fff;color:#0b1220;border:1px solid #e6eef8}
 </style>
 </head>
 <body>
   <div class="wrap" id="appWrap">
     <header>
-      <h1>DIAAM Analytics Pro — Advanced</h1>
+      <h1>DIAAM Analytics — Pro</h1>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
         <div id="userBadge" class="small">Visiteur</div>
         <button id="btnTheme" class="ghost">Thème</button>
@@ -56,7 +81,7 @@
     </header>
 
     <div class="topbar">
-      <div class="filters" role="region" aria-label="Filtres">
+      <div class="filters card" role="region" aria-label="Filtres">
         <select id="clientFilter" aria-label="Client"><option value="">Tous clients</option></select>
         <select id="machineFilter" aria-label="Machine"><option value="">Toutes machines</option></select>
         <select id="categoryFilter" aria-label="Catégorie"><option value="">Toutes catégories</option></select>
@@ -74,45 +99,45 @@
       </div>
     </div>
 
-    <div class="kpis" id="kpis" aria-hidden="false">
-      <div class="kpi"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
-      <div class="kpi"><div class="small">Clients</div><div id="kpClients" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Machines</div><div id="kpMachines" style="font-weight:700">0</div></div>
-      <div class="kpi"><div class="small">Top produit</div><div id="kpTop" style="font-weight:700">—</div></div>
+    <div class="kpis" id="kpis">
+      <div class="kpi card"><div class="small">Total réponses</div><div id="kpTotal" style="font-weight:700;font-size:20px">0</div></div>
+      <div class="kpi card"><div class="small">Clients</div><div id="kpClients" style="font-weight:700">0</div></div>
+      <div class="kpi card"><div class="small">Machines</div><div id="kpMachines" style="font-weight:700">0</div></div>
+      <div class="kpi card"><div class="small">Top produit</div><div id="kpTop" style="font-weight:700">—</div></div>
     </div>
 
     <div class="layout" id="layoutArea">
       <main>
         <div class="grid2">
           <div class="card">
-            <h3 style="margin-top:0">Top produits (bar)</h3>
-            <canvas id="chartTopProducts" height="200" aria-label="Top produits"></canvas>
+            <h3 style="margin-top:0">Top produits</h3>
+            <canvas id="chartTopProducts" height="300" aria-label="Top produits"></canvas>
           </div>
           <div class="card">
-            <h3 style="margin-top:0">Répartition catégories (doughnut)</h3>
-            <canvas id="chartCategories" height="200" aria-label="Répartition catégories"></canvas>
+            <h3 style="margin-top:0">Répartition catégories</h3>
+            <canvas id="chartCategories" height="300" aria-label="Répartition catégories"></canvas>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h3 style="margin-top:0">Timeline — Réponses / jour</h3>
-          <canvas id="chartTimeline" height="120" aria-label="Timeline"></canvas>
+          <canvas id="chartTimeline" height="200" aria-label="Timeline"></canvas>
         </div>
 
         <div class="grid2" style="margin-top:12px">
           <div class="card">
             <h3 style="margin-top:0">Top machines</h3>
-            <canvas id="chartMachines" height="200" aria-label="Top machines"></canvas>
+            <canvas id="chartMachines" height="260" aria-label="Top machines"></canvas>
           </div>
           <div class="card">
             <h3 style="margin-top:0">Heat (machines x catégories)</h3>
-            <canvas id="chartHeat" height="200" aria-label="Heatmap"></canvas>
+            <canvas id="chartHeat" height="260" aria-label="Heatmap"></canvas>
           </div>
         </div>
 
         <div class="card" style="margin-top:12px">
           <h3 style="margin-top:0">Répartition par question</h3>
-          <canvas id="chartQuestion" height="160" aria-label="Questions"></canvas>
+          <canvas id="chartQuestion" height="220" aria-label="Questions"></canvas>
         </div>
       </main>
 
@@ -139,25 +164,27 @@
       </aside>
     </div>
 
-    <footer class="small">DIAAM Analytics Pro — Advanced • Responsive & exports</footer>
+    <footer class="small">DIAAM Analytics Pro — Glass · Mobile · Exports</footer>
   </div>
 
 <script>
+/* ----------------- DOM ready ----------------- */
 document.addEventListener("DOMContentLoaded", async () => {
-  // ---------- CONFIG (edit here if no config.json) ----------
-  // If you prefer to use config.json, load it and override these values.
+
+  // --------- CONFIG ----------
   const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
   const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
   const TABLE_NAME = "survey_results";
 
-  // ---------- Supabase client (UMD loaded earlier) ----------
+  // --------- Supabase init (UMD) ----------
   if (!window.supabase || !window.supabase.createClient) {
-    console.error("Supabase SDK non chargé. Ajoute le script supabase.js avant ce script.");
+    console.error("Supabase SDK not loaded. Add the supabase script before this script.");
+    alert("Supabase SDK non chargé — vérifier la console.");
     return;
   }
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  // ---------- DOM refs ----------
+  // --------- DOM refs ----------
   const clientFilter = document.getElementById('clientFilter');
   const machineFilter = document.getElementById('machineFilter');
   const categoryFilter = document.getElementById('categoryFilter');
@@ -188,48 +215,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ctxHeat = document.getElementById('chartHeat').getContext('2d');
   const ctxQuestion = document.getElementById('chartQuestion').getContext('2d');
 
-  // ---------- state ----------
-  let rows = [];        // full rows from DB
-  let filtered = [];    // after filters
+  // --------- state ----------
+  let rows = []; let filtered = [];
   let charts = { top:null, cat:null, time:null, machines:null, heat:null, question:null };
 
-  // ---------- helpers ----------
+  // --------- helpers ----------
   const fmtDate = d => d ? new Date(d).toLocaleString() : '';
   const safe = v => v == null ? '' : v;
-
   function aggregateChoices(rs){
-    const counts = {};
-    rs.forEach(r=>{
-      for(let i=1;i<=5;i++){
-        const v = r[`choice_${i}`];
-        if (v) counts[v] = (counts[v]||0) + 1;
-      }
-    });
+    const counts = {}; rs.forEach(r=>{ for(let i=1;i<=5;i++){ const v=r[`choice_${i}`]; if(v) counts[v]=(counts[v]||0)+1; } }); 
     return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   }
 
-  // ---------- fetch data ----------
-  async function fetchAll() {
+  // --------- fetch data ----------
+  async function fetchAll(){
     try {
       document.getElementById('userBadge').innerText = 'Chargement...';
       const { data, error } = await sb
         .from(TABLE_NAME)
         .select('*')
         .order('created_at', { ascending: true })
-        .limit(10000); // safety limit
+        .limit(20000);
 
-      if (error) { console.error(error); alert('Erreur lecture Supabase: '+error.message); document.getElementById('userBadge').innerText='Erreur'; return; }
+      if (error) { console.error(error); alert('Erreur Supabase: '+error.message); document.getElementById('userBadge').innerText='Erreur'; return; }
       rows = data || [];
       populateFilters();
       applyFilters();
       document.getElementById('userBadge').innerText = 'Visiteur';
     } catch (e) {
-      console.error(e);
-      document.getElementById('userBadge').innerText = 'Erreur';
+      console.error(e); document.getElementById('userBadge').innerText = 'Erreur';
     }
   }
 
-  // ---------- populate filters ----------
+  // --------- populate filters ----------
   function populateFilters(){
     const clients = Array.from(new Set(rows.map(r=>r.client_id).filter(Boolean))).sort();
     const machines = Array.from(new Set(rows.map(r=>r.machine_id).filter(Boolean))).sort();
@@ -242,33 +260,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     questionFilter.innerHTML = '<option value="">Toutes questions</option>' + questions.map(q=>`<option value="${q}">${q}</option>`).join('');
   }
 
-  // ---------- apply filters ----------
+  // --------- apply filters ----------
   function applyFilters(){
     filtered = rows.slice();
-
-    const c = clientFilter.value; if (c) filtered = filtered.filter(r => r.client_id === c);
-    const m = machineFilter.value; if (m) filtered = filtered.filter(r => r.machine_id === m);
-    const cat = categoryFilter.value; if (cat) filtered = filtered.filter(r => r.category === cat);
-    const q = questionFilter.value; if (q) filtered = filtered.filter(r => r.question === q);
-
-    if (dateFrom.value) filtered = filtered.filter(r => new Date(r.created_at) >= new Date(dateFrom.value + 'T00:00:00'));
-    if (dateTo.value) filtered = filtered.filter(r => new Date(r.created_at) <= new Date(dateTo.value + 'T23:59:59'));
-
+    const c = clientFilter.value; if(c) filtered = filtered.filter(r=> r.client_id === c);
+    const m = machineFilter.value; if(m) filtered = filtered.filter(r=> r.machine_id === m);
+    const cat = categoryFilter.value; if(cat) filtered = filtered.filter(r=> r.category === cat);
+    const q = questionFilter.value; if(q) filtered = filtered.filter(r=> r.question === q);
+    if (dateFrom.value) filtered = filtered.filter(r=> new Date(r.created_at) >= new Date(dateFrom.value + 'T00:00:00'));
+    if (dateTo.value) filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value + 'T23:59:59'));
     renderAll();
   }
 
-  // ---------- renderers ----------
-  function renderKPIs(){
-    kpTotal.innerText = filtered.length;
-    kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size;
-    kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size;
-    const agg = aggregateChoices(filtered);
-    kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—';
-  }
+  // --------- renderers ----------
+  function renderKPIs(){ kpTotal.innerText = filtered.length; kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size; kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size; const agg = aggregateChoices(filtered); kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—'; }
 
-  function renderTable(limit = 300){
+  function renderTable(limit=300){
     tblBody.innerHTML = '';
-    filtered.slice().reverse().slice(0, limit).forEach(r=>{
+    filtered.slice().reverse().slice(0,limit).forEach(r=>{
       const choices = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${fmtDate(r.created_at)}</td><td>${safe(r.client_id)}</td><td>${safe(r.machine_id)}</td><td>${safe(r.category)}</td><td>${safe(r.question)}</td><td>${safe(choices)}</td>`;
@@ -278,28 +287,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderTopProducts(){
     const data = aggregateChoices(filtered).slice(0,20);
-    const labels = data.map(d=>d[0]); const vals = data.map(d=>d[1]);
+    const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
     if (charts.top) charts.top.destroy();
-    charts.top = new Chart(ctxTop, { type:'bar', data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*40%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
+    charts.top = new Chart(ctxTop, { type:'bar', data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*40%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} });
   }
 
   function renderCatPie(){
     const counts = {}; filtered.forEach(r=> counts[r.category] = (counts[r.category]||0)+1 );
-    const labels = Object.keys(counts); const data = Object.values(counts);
+    const labels = Object.keys(counts), data = Object.values(counts);
     if (charts.cat) charts.cat.destroy();
     charts.cat = new Chart(ctxCat, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>`hsl(${i*60%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false} });
   }
 
   function renderTimeline(){
     const perDay = {};
-    filtered.forEach(r=> {
-      if (!r.created_at) return;
-      const d = new Date(r.created_at).toISOString().slice(0,10);
-      perDay[d] = (perDay[d]||0) + 1;
-    });
-    const labels = Object.keys(perDay).sort(); const data = labels.map(l=>perDay[l]);
+    filtered.forEach(r=>{ if(!r.created_at) return; const d = new Date(r.created_at).toISOString().slice(0,10); perDay[d] = (perDay[d]||0)+1; });
+    const labels = Object.keys(perDay).sort(), data = labels.map(l=>perDay[l]);
     if (charts.time) charts.time.destroy();
-    charts.time = new Chart(ctxTime, { type:'line', data:{ labels, datasets:[{ label:'Réponses', data, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.12)', fill:true }] }, options:{responsive:true, maintainAspectRatio:false} });
+    charts.time = new Chart(ctxTime, { type:'line', data:{ labels, datasets:[{ label:'Réponses', data, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.12)', fill:true }] }, options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}} });
   }
 
   function renderMachines(){
@@ -307,28 +312,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
     const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
     if (charts.machines) charts.machines.destroy();
-    charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*45%360} 70% 45%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} });
+    charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*45%360} 70% 45%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} });
   }
 
   function renderHeat(){
     const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
     const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
-    if (!cats.length || !machines.length) {
-      if (charts.heat) { charts.heat.destroy(); charts.heat = null; }
-      return;
-    }
-    const datasets = cats.map((cat,i)=>({
-      label: cat,
-      data: machines.map(m => filtered.filter(r=> r.machine_id===m && r.category===cat).length),
-      stack: 's',
-      backgroundColor: `hsl(${i*50%360} 70% 45%)`
-    }));
+    if (!cats.length || !machines.length) { if (charts.heat){ charts.heat.destroy(); charts.heat=null; } return; }
+    const datasets = cats.map((cat,i)=>({ label:cat, data: machines.map(m=> filtered.filter(r=> r.machine_id===m && r.category===cat).length ), stack:'s', backgroundColor:`hsl(${i*50%360} 70% 45%)` }));
     if (charts.heat) charts.heat.destroy();
-    charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels: machines, datasets }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
+    charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels:machines, datasets }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
   }
 
   function renderQuestionChart(){
-    const counts = {}; filtered.forEach(r => { const k = r.question||'—'; counts[k] = (counts[k]||0)+1; });
+    const counts = {}; filtered.forEach(r=>{ const k=r.question||'—'; counts[k]=(counts[k]||0)+1; });
     const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,12);
     const data = labels.map(l=>counts[l]);
     if (charts.question) charts.question.destroy();
@@ -336,23 +333,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function renderAll(){
-    renderKPIs();
-    renderTopProducts();
-    renderCatPie();
-    renderTimeline();
-    renderMachines();
-    renderHeat();
-    renderQuestionChart();
-    renderTable();
+    renderKPIs(); renderTopProducts(); renderCatPie(); renderTimeline(); renderMachines(); renderHeat(); renderQuestionChart(); renderTable();
   }
 
-  // ---------- exports ----------
+  // --------- Exports (safe) ----------
   function exportCSV(){
     if (!filtered.length) return alert('Aucune donnée');
     const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
     const rowsCsv = filtered.map(r => header.map(h=> `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','));
     const csv = [header.join(',')].concat(rowsCsv).join('\n');
-    const blob = new Blob([csv], { type:'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export.csv'; a.click(); URL.revokeObjectURL(a.href);
+    const blob = new Blob([csv], { type:'text/csv' }); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='export.csv'; a.click(); URL.revokeObjectURL(a.href);
   }
 
   function exportXLS(){
@@ -366,11 +356,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function exportPDF(){
-    const area = document.getElementById('layoutArea');
-    const canvas = await html2canvas(area, { scale: 1.5, backgroundColor: null });
+    if (!filtered.length) return alert('Aucune donnée à exporter');
+    const area = document.getElementById('layoutArea'); // capture central area only
+    // reduce scale to avoid max canvas size
+    const scale = window.devicePixelRatio > 1 ? 0.9 : 0.8;
+    const canvas = await html2canvas(area, { scale: scale, useCORS:true, logging:false, backgroundColor: null });
     const imgData = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
     const pageW = doc.internal.pageSize.getWidth();
     const imgW = pageW - 40;
     const imgH = (canvas.height * imgW) / canvas.width;
@@ -378,15 +371,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     doc.save('dashboard.pdf');
   }
 
-  // ---------- quick helpers ----------
+  // --------- quick helpers ----------
   function setDateRange(days){
     const to = new Date(); const from = new Date(); from.setDate(to.getDate() - days);
-    dateFrom.value = from.toISOString().slice(0,10);
-    dateTo.value = to.toISOString().slice(0,10);
-    applyFilters();
+    dateFrom.value = from.toISOString().slice(0,10); dateTo.value = to.toISOString().slice(0,10); applyFilters();
   }
 
-  // ---------- events ----------
+  // --------- events binding ----------
   applyBtn.addEventListener('click', applyFilters);
   btnRefresh.addEventListener('click', fetchAll);
   btnExportCSV.addEventListener('click', exportCSV);
@@ -395,7 +386,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   btnLast7.addEventListener('click', ()=> setDateRange(7));
   btnLast30.addEventListener('click', ()=> setDateRange(30));
-  btnThisMonth.addEventListener('click', ()=> {
+  btnThisMonth.addEventListener('click', ()=>{
     const now = new Date();
     dateFrom.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
     dateTo.value = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
@@ -405,11 +396,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // theme toggle
   document.getElementById('btnTheme').addEventListener('click', ()=>{
-    const wrap = document.getElementById('appWrap');
-    wrap.classList.toggle('light');
+    document.getElementById('appWrap').classList.toggle('light');
   });
 
-  // login stub (optional)
+  // login (optional stub)
   document.getElementById('btnLogin').addEventListener('click', async ()=>{
     const email = prompt('Email admin:'); if(!email) return;
     const pass = prompt('Mot de passe:'); if(!pass) return;
@@ -418,9 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (res.error) { alert('Erreur login: '+res.error.message); return; }
       document.getElementById('userBadge').innerText = email;
       alert('Connecté');
-    } catch(e){
-      console.error(e); alert('Erreur auth: check console');
-    }
+    } catch(e){ console.error(e); alert('Erreur auth'); }
   });
 
   // initial load
@@ -428,7 +416,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 }); // DOMContentLoaded
 </script>
-
 </body>
 </html>
+
 
