@@ -3,76 +3,83 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DIAAM Analytics — Pro (Glass · Mobile)</title>
+<title>DIAAM Analytics — PRO Ultimate</title>
 
 <!-- Dependencies (order matters) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<!-- Supabase UMD (must be before usage) -->
+<!-- Supabase UMD -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/dist/umd/supabase.js"></script>
 
 <style>
-  /* ---------- Theme / glass morphism / mobile-first ---------- */
   :root{
-    --bg-dark: linear-gradient(180deg,#071025 0%, #071a2a 80%);
+    --bg-dark: linear-gradient(180deg,#08101a 0%, #071025 80%);
     --bg-light: linear-gradient(180deg,#f8fafc 0%, #eef2f7 100%);
-    --glass-bg: rgba(255,255,255,0.06);
-    --glass-border: rgba(255,255,255,0.08);
-    --accent: #06b6d4;
+    --card-dark: rgba(255,255,255,0.03);
+    --card-light: rgba(2,6,23,0.03);
     --muted: #94a3b8;
-    --card-radius: 14px;
+    --accent: #6ad1c9; /* softer cyan */
+    --accent-2: #a6b8ff; /* soft blue */
+    --pastel-1: #9ad3bc;
+    --pastel-2: #ffd6a5;
+    --pastel-3: #c6b8ff;
+    --radius: 12px;
     --max-canvas-height: 320px;
   }
   html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg-dark);color:#e6eef8}
-  /* container */
   .wrap{max-width:1200px;margin:12px auto;padding:14px}
   header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   h1{margin:0;font-size:18px}
   /* glass cards */
   .card{
-    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     border: 1px solid rgba(255,255,255,0.04);
     backdrop-filter: blur(6px) saturate(120%);
-    border-radius: var(--card-radius);
+    border-radius: var(--radius);
     padding:12px;
-    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    box-shadow: 0 8px 30px rgba(2,6,23,0.45);
   }
-  /* layout */
   .topbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
   .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  select,input,button{padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.18);color:inherit}
+  select,input,button{padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.16);color:inherit}
   .btn {background:var(--accent);color:#042028;border:none;padding:8px 12px;border-radius:10px;cursor:pointer}
   .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;cursor:pointer}
   .kpis{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
   .kpi{min-width:140px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
   .layout{display:grid;grid-template-columns:1fr 380px;gap:12px;margin-top:12px}
-  main .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   canvas{width:100% !important;height:auto !important;max-height:var(--max-canvas-height) !important}
   .table-scroll{max-height:360px;overflow:auto;margin-top:8px}
   table{width:100%;border-collapse:collapse;color:#cbd5e1}
   th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:13px}
   .small{font-size:13px;color:var(--muted)}
   footer{margin-top:12px;color:var(--muted);font-size:13px}
-  /* responsive mobile-first */
+  /* mobile adjustments */
   @media (max-width:900px){
     .layout{grid-template-columns:1fr}
-    main .grid2{grid-template-columns:1fr}
+    .grid2{grid-template-columns:1fr}
     :root{--max-canvas-height:220px}
     .table-scroll{max-height:220px}
+    .filters{gap:6px}
+    .kpi{min-width:110px;padding:10px}
   }
-  /* light theme toggled class */
+  /* light theme toggled */
   .light body, .light .wrap { color:#0b1220; }
   .light { background:var(--bg-light); color:#0b1220; }
-  .light .card { background: rgba(255,255,255,0.9); border:1px solid rgba(2,6,23,0.04); box-shadow: 0 6px 18px rgba(2,6,23,0.06) }
+  .light .card { background: rgba(255,255,255,0.92); border:1px solid rgba(2,6,23,0.06); box-shadow: 0 6px 18px rgba(2,6,23,0.06) }
   .light select,input,button{background:#fff;color:#0b1220;border:1px solid #e6eef8}
+  /* pivot styles */
+  .pivot-controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  .pivot-table{max-height:300px;overflow:auto;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:6px;background:rgba(0,0,0,0.06)}
+  .chip{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
 </style>
 </head>
 <body>
   <div class="wrap" id="appWrap">
     <header>
-      <h1>DIAAM Analytics — Pro</h1>
+      <h1>DIAAM Analytics — PRO Ultimate</h1>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
         <div id="userBadge" class="small">Visiteur</div>
         <button id="btnTheme" class="ghost">Thème</button>
@@ -104,6 +111,16 @@
       <div class="kpi card"><div class="small">Clients</div><div id="kpClients" style="font-weight:700">0</div></div>
       <div class="kpi card"><div class="small">Machines</div><div id="kpMachines" style="font-weight:700">0</div></div>
       <div class="kpi card"><div class="small">Top produit</div><div id="kpTop" style="font-weight:700">—</div></div>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+      <div class="chip">Période rapide :</div>
+      <button id="btn7" class="ghost">7j</button>
+      <button id="btn15" class="ghost">15j</button>
+      <button id="btn30" class="ghost">30j</button>
+      <button id="btn90" class="ghost">90j</button>
+      <button id="btnMonth" class="ghost">Ce mois</button>
+      <button id="btnAll" class="ghost">Tous</button>
     </div>
 
     <div class="layout" id="layoutArea">
@@ -139,6 +156,19 @@
           <h3 style="margin-top:0">Répartition par question</h3>
           <canvas id="chartQuestion" height="220" aria-label="Questions"></canvas>
         </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Tableau croisé dynamique</h3>
+          <div class="pivot-controls">
+            <label>Rows<select id="pivotRows"><option value="category">Catégorie</option><option value="question">Question</option><option value="client_id">Client</option><option value="machine_id">Machine</option></select></label>
+            <label>Columns<select id="pivotCols"><option value="question">Question</option><option value="category">Catégorie</option><option value="client_id">Client</option><option value="machine_id">Machine</option><option value="">(aucun)</option></select></label>
+            <label>Value<select id="pivotValue"><option value="count">Count</option><option value="choice_1">Choice 1</option></select></label>
+            <label>Agg<select id="pivotAgg"><option value="count">Count</option><option value="sum">Sum</option><option value="avg">Avg</option></select></label>
+            <button id="pivotApply" class="btn">Appliquer pivot</button>
+            <button id="pivotExport" class="ghost">Export pivot CSV</button>
+          </div>
+          <div class="pivot-table" id="pivotArea" role="table" aria-label="Pivot table"></div>
+        </div>
       </main>
 
       <aside>
@@ -153,33 +183,32 @@
         </div>
 
         <div class="card" style="margin-top:12px">
-          <h3 style="margin-top:0">Filtres rapides</h3>
+          <h3 style="margin-top:0">Actions</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button id="last7" class="ghost">7j</button>
-            <button id="last30" class="ghost">30j</button>
-            <button id="thisMonth" class="ghost">Mois</button>
-            <button id="all" class="ghost">Tous</button>
+            <button id="exportCSV" class="ghost">Export CSV</button>
+            <button id="exportXLS" class="ghost">Export XLSX</button>
+            <button id="exportPDF" class="ghost">Export PDF</button>
+            <button id="refreshBtn" class="ghost">Rafraîchir</button>
           </div>
         </div>
       </aside>
     </div>
 
-    <footer class="small">DIAAM Analytics Pro — Glass · Mobile · Exports</footer>
+    <footer class="small">DIAAM Analytics Pro — Ultimate • Soft colors • Pivot • Mobile</footer>
   </div>
 
 <script>
-/* ----------------- DOM ready ----------------- */
+/* ---------------- DOM ready ---------------- */
 document.addEventListener("DOMContentLoaded", async () => {
 
   // --------- CONFIG ----------
   const SUPABASE_URL = "https://vawvmiosgslvykfqxffs.supabase.co";
-  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhd3ZtaW9zZ3NsdnlrZnF4ZmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NjcxNTAsImV4cCI6MjA3OTU0MzE1MH0.T_q5fT1PCOt_pwEFdoKqePFYp7N4IXZSN1XA3HGG5v8";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5...T_q5fT1PCOt_..."; // keep full key from your config
   const TABLE_NAME = "survey_results";
 
-  // --------- Supabase init (UMD) ----------
+  // ensure supabase UMD is available
   if (!window.supabase || !window.supabase.createClient) {
-    console.error("Supabase SDK not loaded. Add the supabase script before this script.");
-    alert("Supabase SDK non chargé — vérifier la console.");
+    alert('Supabase SDK non chargé. Vérifier inclusion du script supabase.js.');
     return;
   }
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -193,13 +222,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dateTo = document.getElementById('dateTo');
   const applyBtn = document.getElementById('applyFilters');
   const btnRefresh = document.getElementById('btnRefresh');
-  const btnExportCSV = document.getElementById('exportCSV');
-  const btnExportXLS = document.getElementById('exportXLS');
-  const btnExportPDF = document.getElementById('exportPDF');
-  const btnLast7 = document.getElementById('last7');
-  const btnLast30 = document.getElementById('last30');
-  const btnThisMonth = document.getElementById('thisMonth');
-  const btnAll = document.getElementById('all');
+  const btnExportCSV = document.querySelectorAll('#exportCSV');
+  const btnExportXLS = document.querySelectorAll('#exportXLS');
+  const btnExportPDF = document.querySelectorAll('#exportPDF');
+  const btn7 = document.getElementById('btn7');
+  const btn15 = document.getElementById('btn15');
+  const btn30 = document.getElementById('btn30');
+  const btn90 = document.getElementById('btn90');
+  const btnMonth = document.getElementById('btnMonth');
+  const btnAll = document.getElementById('btnAll');
 
   const kpTotal = document.getElementById('kpTotal');
   const kpClients = document.getElementById('kpClients');
@@ -215,37 +246,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ctxHeat = document.getElementById('chartHeat').getContext('2d');
   const ctxQuestion = document.getElementById('chartQuestion').getContext('2d');
 
+  // pivot refs
+  const pivotRows = document.getElementById('pivotRows');
+  const pivotCols = document.getElementById('pivotCols');
+  const pivotValue = document.getElementById('pivotValue');
+  const pivotAgg = document.getElementById('pivotAgg');
+  const pivotApply = document.getElementById('pivotApply');
+  const pivotArea = document.getElementById('pivotArea');
+  const pivotExport = document.getElementById('pivotExport');
+
   // --------- state ----------
   let rows = []; let filtered = [];
   let charts = { top:null, cat:null, time:null, machines:null, heat:null, question:null };
+  let lastQueryId = 0; // for concurrency safety
 
   // --------- helpers ----------
   const fmtDate = d => d ? new Date(d).toLocaleString() : '';
   const safe = v => v == null ? '' : v;
   function aggregateChoices(rs){
-    const counts = {}; rs.forEach(r=>{ for(let i=1;i<=5;i++){ const v=r[`choice_${i}`]; if(v) counts[v]=(counts[v]||0)+1; } }); 
+    const counts = {};
+    rs.forEach(r=>{
+      for(let i=1;i<=5;i++){
+        const v = r[`choice_${i}`];
+        if (v) counts[v] = (counts[v]||0) + 1;
+      }
+    });
     return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   }
 
-  // --------- fetch data ----------
-  async function fetchAll(){
+  // colors pastel palette
+  const palette = ['#9ad3bc','#ffd6a5','#c6b8ff','#bfe3ff','#f7c6c7','#d6e7c7','#f1e0ff'];
+
+  // debounce util
+  function debounce(fn, t=300){
+    let to; return (...args)=>{ clearTimeout(to); to=setTimeout(()=>fn(...args), t); };
+  }
+
+  // --------- fetch data (safe, debounced) ----------
+  async function fetchAll({limit=20000} = {}) {
+    const qid = ++lastQueryId;
+    document.getElementById('userBadge').innerText = 'Chargement...';
     try {
-      document.getElementById('userBadge').innerText = 'Chargement...';
       const { data, error } = await sb
         .from(TABLE_NAME)
         .select('*')
         .order('created_at', { ascending: true })
-        .limit(20000);
+        .limit(limit);
 
+      if (qid !== lastQueryId) return; // stale
       if (error) { console.error(error); alert('Erreur Supabase: '+error.message); document.getElementById('userBadge').innerText='Erreur'; return; }
       rows = data || [];
       populateFilters();
       applyFilters();
       document.getElementById('userBadge').innerText = 'Visiteur';
-    } catch (e) {
+    } catch (e){
       console.error(e); document.getElementById('userBadge').innerText = 'Erreur';
     }
   }
+  const fetchAllDeb = debounce(fetchAll, 200);
 
   // --------- populate filters ----------
   function populateFilters(){
@@ -258,6 +316,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     machineFilter.innerHTML = '<option value="">Toutes machines</option>' + machines.map(m=>`<option value="${m}">${m}</option>`).join('');
     categoryFilter.innerHTML = '<option value="">Toutes catégories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
     questionFilter.innerHTML = '<option value="">Toutes questions</option>' + questions.map(q=>`<option value="${q}">${q}</option>`).join('');
+
+    // pivot selects: keep in sync
+    const allFields = ['','category','question','client_id','machine_id'];
+    pivotRows.innerHTML = allFields.map(f=>`<option value="${f}">${f||'(aucun)'}</option>`).join('');
+    pivotCols.innerHTML = allFields.map(f=>`<option value="${f}">${f||'(aucun)'}</option>`).join('');
+    pivotValue.innerHTML = `<option value="count">Count</option><option value="choice_1">Choice 1</option><option value="choice_2">Choice 2</option>`;
   }
 
   // --------- apply filters ----------
@@ -271,11 +335,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (dateTo.value) filtered = filtered.filter(r=> new Date(r.created_at) <= new Date(dateTo.value + 'T23:59:59'));
     renderAll();
   }
+  const applyFiltersDeb = debounce(applyFilters, 120);
 
   // --------- renderers ----------
-  function renderKPIs(){ kpTotal.innerText = filtered.length; kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size; kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size; const agg = aggregateChoices(filtered); kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—'; }
+  function renderKPIs(){
+    kpTotal.innerText = filtered.length;
+    kpClients.innerText = new Set(filtered.map(r=>r.client_id)).size;
+    kpMachines.innerText = new Set(filtered.map(r=>r.machine_id)).size;
+    const agg = aggregateChoices(filtered);
+    kpTop.innerText = agg[0] ? `${agg[0][0]} (${agg[0][1]})` : '—';
+  }
 
-  function renderTable(limit=300){
+  function renderTable(limit=250){
     tblBody.innerHTML = '';
     filtered.slice().reverse().slice(0,limit).forEach(r=>{
       const choices = [r.choice_1,r.choice_2,r.choice_3,r.choice_4,r.choice_5].filter(Boolean).join(' | ');
@@ -285,58 +356,142 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  function destroyChart(ch){
+    try { if (ch) { ch.destroy(); } } catch(e){ /* ignore */ }
+  }
+
   function renderTopProducts(){
     const data = aggregateChoices(filtered).slice(0,20);
     const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
-    if (charts.top) charts.top.destroy();
-    charts.top = new Chart(ctxTop, { type:'bar', data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*40%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} });
+    destroyChart(charts.top);
+    charts.top = new Chart(ctxTop, {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Sélections', data:vals, backgroundColor: labels.map((_,i)=>palette[i%palette.length]) }]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
   }
 
-  function renderCatPie(){
+  function renderCatChart(){
     const counts = {}; filtered.forEach(r=> counts[r.category] = (counts[r.category]||0)+1 );
     const labels = Object.keys(counts), data = Object.values(counts);
-    if (charts.cat) charts.cat.destroy();
-    charts.cat = new Chart(ctxCat, { type:'doughnut', data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>`hsl(${i*60%360} 70% 50%)`)}] }, options:{responsive:true, maintainAspectRatio:false} });
+    destroyChart(charts.cat);
+    charts.cat = new Chart(ctxCat, {
+      type:'doughnut',
+      data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>palette[i%palette.length]) }]},
+      options:{responsive:true, maintainAspectRatio:false}
+    });
   }
 
   function renderTimeline(){
     const perDay = {};
     filtered.forEach(r=>{ if(!r.created_at) return; const d = new Date(r.created_at).toISOString().slice(0,10); perDay[d] = (perDay[d]||0)+1; });
     const labels = Object.keys(perDay).sort(), data = labels.map(l=>perDay[l]);
-    if (charts.time) charts.time.destroy();
-    charts.time = new Chart(ctxTime, { type:'line', data:{ labels, datasets:[{ label:'Réponses', data, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.12)', fill:true }] }, options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}} });
+    destroyChart(charts.time);
+    charts.time = new Chart(ctxTime, {
+      type:'line',
+      data:{ labels, datasets:[{ label:'Réponses', data, borderColor:palette[0], backgroundColor:'rgba(154,211,188,0.12)', fill:true }]},
+      options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
+    });
   }
 
   function renderMachines(){
     const counts = {}; filtered.forEach(r=> counts[r.machine_id] = (counts[r.machine_id]||0)+1 );
     const data = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12);
     const labels = data.map(d=>d[0]), vals = data.map(d=>d[1]);
-    if (charts.machines) charts.machines.destroy();
-    charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor:labels.map((_,i)=>`hsl(${i*45%360} 70% 45%)`)}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} });
+    destroyChart(charts.machines);
+    charts.machines = new Chart(ctxMachines, { type:'bar', data:{ labels, datasets:[{ data:vals, backgroundColor: labels.map((_,i)=>palette[i%palette.length]) }]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}} });
   }
 
   function renderHeat(){
     const cats = Array.from(new Set(filtered.map(r=>r.category))).sort();
     const machines = Array.from(new Set(filtered.map(r=>r.machine_id))).sort();
-    if (!cats.length || !machines.length) { if (charts.heat){ charts.heat.destroy(); charts.heat=null; } return; }
-    const datasets = cats.map((cat,i)=>({ label:cat, data: machines.map(m=> filtered.filter(r=> r.machine_id===m && r.category===cat).length ), stack:'s', backgroundColor:`hsl(${i*50%360} 70% 45%)` }));
-    if (charts.heat) charts.heat.destroy();
-    charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels:machines, datasets }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
+    if (!cats.length || !machines.length) { destroyChart(charts.heat); charts.heat = null; return; }
+    const datasets = cats.map((cat,i)=>({ label:cat, data: machines.map(m=> filtered.filter(r=> r.machine_id===m && r.category===cat).length), stack:'s', backgroundColor:palette[i%palette.length] }));
+    destroyChart(charts.heat);
+    charts.heat = new Chart(ctxHeat, { type:'bar', data:{ labels: machines, datasets }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}} } });
   }
 
   function renderQuestionChart(){
     const counts = {}; filtered.forEach(r=>{ const k=r.question||'—'; counts[k]=(counts[k]||0)+1; });
     const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]).slice(0,12);
     const data = labels.map(l=>counts[l]);
-    if (charts.question) charts.question.destroy();
-    charts.question = new Chart(ctxQuestion, { type:'polarArea', data:{ labels, datasets:[{ data, backgroundColor:labels.map((_,i)=>`hsl(${i*30%360} 70% 50%)`) }] }, options:{responsive:true, maintainAspectRatio:false} });
+    destroyChart(charts.question);
+    charts.question = new Chart(ctxQuestion, { type:'polarArea', data:{ labels, datasets:[{ data, backgroundColor: labels.map((_,i)=>palette[i%palette.length]) }]}, options:{responsive:true, maintainAspectRatio:false} });
   }
 
   function renderAll(){
-    renderKPIs(); renderTopProducts(); renderCatPie(); renderTimeline(); renderMachines(); renderHeat(); renderQuestionChart(); renderTable();
+    renderKPIs(); renderTopProducts(); renderCatChart(); renderTimeline(); renderMachines(); renderHeat(); renderQuestionChart(); renderTable();
   }
 
-  // --------- Exports (safe) ----------
+  // --------- pivot table (client-side) ----------
+  function buildPivot(){
+    const rowField = pivotRows.value || null;
+    const colField = pivotCols.value || null;
+    const valField = pivotValue.value || 'count';
+    const agg = pivotAgg.value || 'count';
+
+    // build map: rowKey -> colKey -> values[]
+    const map = new Map();
+    const rowKeys = new Set(), colKeys = new Set();
+
+    filtered.forEach(r=>{
+      const rowKey = rowField ? (r[rowField] || '(vide)') : '(all)';
+      const colKey = colField ? (r[colField] || '(vide)') : '(all)';
+      rowKeys.add(rowKey); colKeys.add(colKey);
+      const key = rowKey;
+      if (!map.has(key)) map.set(key, new Map());
+      const rowMap = map.get(key);
+      if (!rowMap.has(colKey)) rowMap.set(colKey, []);
+      const cell = rowMap.get(colKey);
+      if (valField === 'count') cell.push(1);
+      else cell.push(r[valField] || 0);
+    });
+
+    const rowsArr = Array.from(rowKeys).sort();
+    const colsArr = Array.from(colKeys).sort();
+
+    // compute aggregated values
+    const table = [];
+    rowsArr.forEach(rk=>{
+      const rowMap = map.get(rk) || new Map();
+      const rowObj = { row: rk, cells: {} };
+      colsArr.forEach(ck=>{
+        const vals = rowMap.get(ck) || [];
+        let out = 0;
+        if (agg === 'count') out = vals.length;
+        else if (agg === 'sum') out = vals.reduce((a,b)=>a+b,0);
+        else if (agg === 'avg') out = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+        rowObj.cells[ck] = out;
+      });
+      table.push(rowObj);
+    });
+
+    // render HTML table
+    let html = '<table style="width:100%;border-collapse:collapse;"><thead><tr><th>' + (rowField||'') + '</th>';
+    colsArr.forEach(c=> html += `<th style="text-align:right">${c}</th>`);
+    html += '</tr></thead><tbody>';
+    table.forEach(r=>{
+      html += `<tr><td style="font-weight:600">${r.row}</td>`;
+      colsArr.forEach(c=> html += `<td style="text-align:right">${r.cells[c] || 0}</td>`);
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    pivotArea.innerHTML = html;
+
+    // store pivot for export
+    pivotArea._pivot = { rowsArr, colsArr, table };
+  }
+
+  function exportPivotCSV(){
+    const p = pivotArea._pivot;
+    if (!p) return alert('Aucun pivot généré');
+    const header = [pivotRows.value || '', ...p.colsArr];
+    const rowsCsv = p.table.map(r => [r.row, ...p.colsArr.map(c=> r.cells[c] || 0)].map(v=>`"${v}"`).join(','));
+    const csv = [header.map(h=>`"${h}"`).join(','), ...rowsCsv].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='pivot.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  // --------- exports ----------
   function exportCSV(){
     if (!filtered.length) return alert('Aucune donnée');
     const header = ['created_at','client_id','machine_id','category','question','choice_1','choice_2','choice_3','choice_4','choice_5'];
@@ -356,11 +511,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function exportPDF(){
-    if (!filtered.length) return alert('Aucune donnée à exporter');
-    const area = document.getElementById('layoutArea'); // capture central area only
-    // reduce scale to avoid max canvas size
-    const scale = window.devicePixelRatio > 1 ? 0.9 : 0.8;
-    const canvas = await html2canvas(area, { scale: scale, useCORS:true, logging:false, backgroundColor: null });
+    if (!filtered.length) return alert('Aucune donnée');
+    const area = document.getElementById('layoutArea');
+    // choose scale to avoid "canvas too large" errors
+    const scale = Math.min(1.0, window.devicePixelRatio || 1) * 0.9;
+    const canvas = await html2canvas(area, { scale: scale, useCORS:true, logging:false, backgroundColor:null });
     const imgData = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
@@ -371,35 +526,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     doc.save('dashboard.pdf');
   }
 
-  // --------- quick helpers ----------
-  function setDateRange(days){
-    const to = new Date(); const from = new Date(); from.setDate(to.getDate() - days);
-    dateFrom.value = from.toISOString().slice(0,10); dateTo.value = to.toISOString().slice(0,10); applyFilters();
+  // --------- quick period helpers ----------
+  function setRangeDays(d){
+    const to = new Date(); const from = new Date(); from.setDate(to.getDate()-d);
+    dateFrom.value = from.toISOString().slice(0,10); dateTo.value = to.toISOString().slice(0,10); applyFiltersDeb();
   }
+  function setThisMonth(){
+    const now = new Date(); dateFrom.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10); dateTo.value = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10); applyFiltersDeb();
+  }
+  function setAll(){ dateFrom.value=''; dateTo.value=''; clientFilter.value=''; machineFilter.value=''; categoryFilter.value=''; questionFilter.value=''; applyFiltersDeb(); }
 
-  // --------- events binding ----------
-  applyBtn.addEventListener('click', applyFilters);
-  btnRefresh.addEventListener('click', fetchAll);
-  btnExportCSV.addEventListener('click', exportCSV);
-  btnExportXLS.addEventListener('click', exportXLS);
-  btnExportPDF.addEventListener('click', exportPDF);
+  // --------- event wiring ----------
+  applyBtn.addEventListener('click', applyFiltersDeb);
+  btnRefresh.addEventListener('click', ()=> fetchAllDeb({limit:20000}));
+  document.querySelectorAll('#exportCSV').forEach(b=>b.addEventListener('click', exportCSV));
+  document.querySelectorAll('#exportXLS').forEach(b=>b.addEventListener('click', exportXLS));
+  document.querySelectorAll('#exportPDF').forEach(b=>b.addEventListener('click', exportPDF));
 
-  btnLast7.addEventListener('click', ()=> setDateRange(7));
-  btnLast30.addEventListener('click', ()=> setDateRange(30));
-  btnThisMonth.addEventListener('click', ()=>{
-    const now = new Date();
-    dateFrom.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
-    dateTo.value = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
-    applyFilters();
-  });
-  btnAll.addEventListener('click', ()=> { dateFrom.value=''; dateTo.value=''; clientFilter.value=''; machineFilter.value=''; categoryFilter.value=''; questionFilter.value=''; applyFilters(); });
+  btn7.addEventListener('click', ()=> setRangeDays(7));
+  btn15.addEventListener('click', ()=> setRangeDays(15));
+  btn30.addEventListener('click', ()=> setRangeDays(30));
+  btn90.addEventListener('click', ()=> setRangeDays(90));
+  btnMonth.addEventListener('click', setThisMonth);
+  btnAll.addEventListener('click', setAll);
+
+  pivotApply.addEventListener('click', buildPivot);
+  pivotExport.addEventListener('click', exportPivotCSV);
 
   // theme toggle
-  document.getElementById('btnTheme').addEventListener('click', ()=>{
-    document.getElementById('appWrap').classList.toggle('light');
-  });
+  document.getElementById('btnTheme').addEventListener('click', ()=> document.getElementById('appWrap').classList.toggle('light'));
 
-  // login (optional stub)
+  // login stub
   document.getElementById('btnLogin').addEventListener('click', async ()=>{
     const email = prompt('Email admin:'); if(!email) return;
     const pass = prompt('Mot de passe:'); if(!pass) return;
@@ -412,11 +569,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // initial load
-  await fetchAll();
+  await fetchAllDeb({limit:20000});
 
 }); // DOMContentLoaded
 </script>
 </body>
+</html>
+
 </html>
 
 
