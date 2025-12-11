@@ -44,11 +44,11 @@
     },
     {
       "id": "cat3",
-      "label": "Salée",
+      "label": "Salé",
       "questions": [
         {
           "id": "q5",
-          "label": "Quel produit Salée aimeriez-vous en plus ?",
+          "label": "Quel produit Salé aimeriez-vous en plus ?",
           "choices": ["cacahuéte", "Gateaux apéro", "Produit1", "Produit2"]
         }
       ]
